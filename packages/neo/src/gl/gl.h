@@ -11,6 +11,7 @@
 
 // TODO: #include "parameters/ModelTransformation.h"
 #include "parameters/Projection.h"
+#include "parameters/Camera.h"
 
 #include "target/GlfwWindow.h"
 #include "target/RenderTarget.h"

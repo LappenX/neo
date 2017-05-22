@@ -6,6 +6,7 @@
 #include <util/Util.h>
 
 #include <vector>
+#include <utility>
 
 template <typename... TArgs>
 class Observer;
@@ -30,9 +31,18 @@ public:
   {
     for (ObservableEvent<TArgs...>* observed : m_observed)
     {
-      auto it = std::find(observed->m_observers.begin(), observed->m_observers.end(), this);
-      ASSERT(it != observed->m_observers.end(), "Observer not found in observed->m_observers");
-      observed->m_observers.erase(it);
+      bool found = false;
+      auto it = observed->m_observers.begin();
+      for (; it != observed->m_observers.end(); ++it)
+      {
+        if (it->first == this)
+        {
+          observed->m_observers.erase(it);
+          found = true;
+          break;
+        }
+      }
+      ASSERT(found, "Observer not found in observed->m_observers");
     }
   }
 
@@ -53,6 +63,24 @@ private:
   NO_COPYING(Observer, <TArgs...>)
 };
 
+template <typename TFunctor, typename... TArgs>
+class FunctorObserver : public Observer<TArgs...>
+{
+public:
+  FunctorObserver(TFunctor functor)
+    : m_functor(functor)
+  {
+  }
+
+  void handle(TArgs... args)
+  {
+    m_functor(args...);
+  }
+
+private:
+  TFunctor m_functor;
+};
+
 template <typename... TArgs>
 class ObservableEvent
 {
@@ -63,25 +91,35 @@ public:
 
   virtual ~ObservableEvent()
   {
-    for (Observer<TArgs...>* observer : m_observers)
+    for (auto pair : m_observers)
     {
-      auto it = std::find(observer->m_observed.begin(), observer->m_observed.end(), this);
-      ASSERT(it != observer->m_observed.end(), "ObservableEvent not found in observer->m_observed");
-      observer->m_observed.erase(it);
+      auto it = std::find(pair.first->m_observed.begin(), pair.first->m_observed.end(), this);
+      ASSERT(it != pair.first->m_observed.end(), "ObservableEvent not found in observer->m_observed");
+      pair.first->m_observed.erase(it);
+      if (pair.second)
+      {
+        delete pair.first;
+      }
     }
   }
 
   void subscribe(Observer<TArgs...>* observer)
   {
-    this->m_observers.push_back(observer);
+    this->m_observers.push_back(std::make_pair(observer, false));
     observer->m_observed.push_back(this);
+  }
+
+  template <typename TFunctor>
+  void operator+=(TFunctor observer)
+  {
+    this->m_observers.push_back(std::make_pair(new FunctorObserver<TFunctor, TArgs...>(observer), true));
   }
 
   template <typename... TArgs2>
   friend class Observer;
 
 protected:
-  std::vector<Observer<TArgs...>*> m_observers;
+  std::vector<std::pair<Observer<TArgs...>*, bool>> m_observers; // TODO: replace with maybe_delete_ptr/ maybe_owns_ptr class
 
 private:
   NO_COPYING(ObservableEvent, <TArgs...>)
@@ -97,9 +135,9 @@ public:
 
   void raise(TArgs... args)
   {
-    for (Observer<TArgs...>* observer : this->m_observers)
+    for (auto pair : this->m_observers)
     {
-      observer->handle(args...);
+      pair.first->handle(args...);
     }
   }
 

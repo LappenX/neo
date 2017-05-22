@@ -4,28 +4,101 @@
 #include <Common.h>
 
 #include "../target/RenderTarget.h"
+#include <MVC.h>
 
 #include <string>
 #include <GLFW/glfw3.h>
 
 namespace gl {
 
-class GlfwWindow : public RenderTarget
+class GlfwWindow;
+
+enum GlfwKeyType
+{
+  GLFW_TYPE_KEYBOARD_KEY,
+  GLFW_TYPE_KEYBOARD_SCANCODE,
+  GLFW_TYPE_MOUSE_BUTTON
+};
+
+class GlfwKey
+{
+public:
+  GlfwKey(int code, GlfwKeyType type)
+    : m_code(code)
+    , m_type(type)
+  {
+  }
+
+  friend class GlfwWindow;
+
+private:
+  int m_code;
+  GlfwKeyType m_type;
+};
+
+class GlfwWindow : public RenderTarget, public View, public Controller<GlfwKey>
 {
 public:
   GlfwWindow(std::string title, uint32_t width, uint32_t height, uint32_t refresh_rate, bool vsync);
   virtual ~GlfwWindow();
+
+  uint32_t getWidth() const
+  {
+    return m_width;
+  }
+
+  uint32_t getHeight() const
+  {
+    return m_height;
+  }
 
   void bind()
   {
     glBindFramebuffer(GL_FRAMEBUFFER, 0); // TODO: Cp. FrameBufferObject.h
   }
 
-  void afterDraw()
+  void swap()
   {
     glfwSwapBuffers(m_handle);
+  }
+
+  void poll()
+  {
     glfwPollEvents();
   }
+
+  bool isKeyDown(const GlfwKey& key)
+  {
+    switch (key.m_type)
+    {
+      case GLFW_TYPE_KEYBOARD_KEY:
+      {
+        return glfwGetKey(m_handle, key.m_code) == GLFW_PRESS;
+      }
+      case GLFW_TYPE_KEYBOARD_SCANCODE:
+      {
+        throw GlException("Cannot call glfwGetKey for a key's scancode");
+      }
+      case GLFW_TYPE_MOUSE_BUTTON:
+      {
+        return glfwGetMouseButton(m_handle, key.m_code) == GLFW_PRESS;
+      }
+      default:
+      {
+        ASSERT(false, "Invalid key type");
+        return false;
+      }
+    }
+  }
+
+  void setCursorPosition(double x, double y)
+  {
+    glfwSetCursorPos(m_handle, x, y);
+  }
+
+  friend void key_callback(GLFWwindow* handle, int key, int scancode, int action, int mods);
+  friend void cursor_position_callback(GLFWwindow* window, double xpos, double ypos);
+  friend void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 
 private:
   std::string m_title;

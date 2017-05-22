@@ -12,8 +12,7 @@ class Shader;
 class RenderTarget : public UnRenderStep
 {
 public:
-  virtual void bind() = 0; // TODO: bind in pre
-  virtual void afterDraw() = 0; // TODO: somewhere global? So that swapping doesnt happen more than once per loop, remove afterDraw in RenderTarget
+  virtual void bind() = 0;
 
   void render(RenderContext& context)
   {

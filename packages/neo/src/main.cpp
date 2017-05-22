@@ -18,6 +18,9 @@ int main (int argc, char* argv[])
   gl::glew::init();
 
 
+
+
+
   gl::Viewport viewport(0, 0, 500, 400);
   gl::ClearColorBuffer clear_buffer(glm::vec4(0, 0, 1, 1));
 
@@ -31,10 +34,11 @@ int main (int argc, char* argv[])
 
   gl::BufferObject rectangle_data(GL_STATIC_DRAW);
   glm::vec3 data[4];
-  data[0] = glm::vec3(-100, 100, 0);
-  data[1] = glm::vec3(-100, -100, 0);
-  data[2] = glm::vec3(100, 100, 0);
-  data[3] = glm::vec3(100, -100, 0);
+  float size = 0.5f;
+  data[0] = glm::vec3(-size, size, 0);
+  data[1] = glm::vec3(-size, -size, 0);
+  data[2] = glm::vec3(size, size, 0);
+  data[3] = glm::vec3(size, -size, 0);
   rectangle_data.write(GL_ARRAY_BUFFER, reinterpret_cast<uint8_t*>(data), 4 * 3 * sizeof(float));
 
   gl::VertexArrayObject rectangle_vao(attribute_mapping, GL_TRIANGLE_STRIP);
@@ -46,19 +50,26 @@ int main (int argc, char* argv[])
 
   gl::MultiplicationRenderStack<glm::mat4, 64>
     model_matrix;
-  
-  SimpleObservableProperty<float> left(-200);
-  SimpleObservableProperty<float> right(200);
-  SimpleObservableProperty<float> bottom(-200);
-  SimpleObservableProperty<float> top(200);
-  SimpleObservableProperty<float> near(-1);
-  SimpleObservableProperty<float> far(1);
-  gl::OrthographicProjection<SimpleObservableProperty<float>, SimpleObservableProperty<float>, SimpleObservableProperty<float>,
-                             SimpleObservableProperty<float>, SimpleObservableProperty<float>, SimpleObservableProperty<float>>
-    projection_matrix(&left, &right, &bottom, &top, &near, &far);
 
-  StaticFunctionMappedProperty<math::functor::multiply, decltype(projection_matrix), decltype(model_matrix)>
-    mvp_matrix(&projection_matrix, &model_matrix);
+  SimpleObservableProperty<glm::vec3> camera_pos(glm::vec3(0, 0, -1));
+  SimpleObservableProperty<glm::vec3> camera_view_target(glm::vec3(0, 0, 0));
+  SimpleObservableProperty<glm::vec3> camera_up(glm::vec3(0, 1, 0));
+  gl::LookAtCamera<SimpleObservableProperty<glm::vec3>, SimpleObservableProperty<glm::vec3>, SimpleObservableProperty<glm::vec3>>
+    view_matrix(&camera_pos, &camera_view_target, &camera_up);
+  
+  StaticFunctionMappedProperty<math::functor::multiply, decltype(view_matrix), decltype(model_matrix)>
+    mv_matrix(&view_matrix, &model_matrix);
+
+  SimpleObservableProperty<float> fov(45.0f / 180.0f * 3.14159265f);
+  SimpleObservableProperty<float> aspect_ratio(((float) window.getWidth()) / window.getHeight());
+  SimpleObservableProperty<float> near(0.01f);
+  SimpleObservableProperty<float> far(100);
+  gl::PerspectiveProjection<SimpleObservableProperty<float>, SimpleObservableProperty<float>, SimpleObservableProperty<float>,
+                             SimpleObservableProperty<float>>
+    projection_matrix(&fov, &aspect_ratio, &near, &far);
+
+  StaticFunctionMappedProperty<math::functor::multiply, decltype(projection_matrix), decltype(mv_matrix)>
+    mvp_matrix(&projection_matrix, &mv_matrix);
 
   gl::Uniform<glm::mat4> rectangle_mvp_uniform(&rectangle_shader, "uModelViewProjectionMatrix");
 
@@ -68,15 +79,15 @@ int main (int argc, char* argv[])
 
 
 
-
-  
-  auto render = gl::then(
+  /*auto render = gl::then(
                           &clear_buffer,
                           &viewport,
                           gl::sub(&rectangle_shader, gl::then(&mvp_setter, &window, &rectangle_vao))
-                        );
+                        );*/
 
-
+  window.getKeyPressEvent() += [&](gl::GlfwKey key, bool down){
+    camera_pos.set(glm::vec3(0, 0, camera_pos.get().z - 1));
+  };
 
   gl::RenderContext context;
   while (true)
@@ -88,8 +99,9 @@ int main (int argc, char* argv[])
     window.render(context);
     rectangle_vao.render(context);
     rectangle_shader.post(context);
-    //render->render(context);
-    window.afterDraw();
+
+    window.poll();
+    window.swap();
   }
 
   gl::glfw::deinit();
