@@ -11,6 +11,42 @@ public:
   virtual void swap() = 0;
 };
 
+
+
+
+
+
+
+enum KeyCaption : uint8_t
+{
+  KEYBOARD_ARROW_UP,
+  KEYBOARD_ARROW_DOWN,
+  KEYBOARD_ARROW_RIGHT,
+  KEYBOARD_ARROW_LEFT,
+
+  MOUSE_LEFT,
+  MOUSE_RIGHT,
+
+  KEY_CAPTION_NUM
+};
+
+class KeyboardLayout
+{
+public:
+  KeyCaption fromUS(KeyCaption us) const
+  {
+    return m_map[us];
+  }
+
+  KeyCaption& operator[](KeyCaption us)
+  {
+    return m_map[us];
+  }
+
+private:
+  KeyCaption m_map[KEY_CAPTION_NUM];
+};
+
 template <typename TKeyType>
 class Controller
 {

@@ -22,7 +22,22 @@ public:
 private:
   NO_COPYING(LookAtCamera, <TInputProperties...>)
 };
+/*
+template <typename... TInputProperties>
+class LocRotCamera : public LazyMappedObservableProperty<LocRotCamera<TInputProperties...>, glm::mat4, TInputProperties...>
+{
+public:
+  using LazyMappedObservableProperty<LocRotCamera<TInputProperties...>, glm::mat4, TInputProperties...>::LazyMappedObservableProperty;
 
+  glm::mat4 forward(glm::vec3 location, glm::vec3 rotation) const
+  {
+    return glm::translate(pos, target, up);
+  }
+
+private:
+  NO_COPYING(LocRotCamera, <TInputProperties...>)
+};
+*/
 } // end of ns gl
 
 #endif // VIEW_GL_LEVEL1_CAMERA_H

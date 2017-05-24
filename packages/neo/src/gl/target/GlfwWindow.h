@@ -29,11 +29,58 @@ public:
   {
   }
 
+  KeyCaption getKeyCaption(KeyboardLayout layout) const
+  {
+    return layout.fromUS(getUSKeyCaption());
+  }
+
   friend class GlfwWindow;
 
 private:
   int m_code;
   GlfwKeyType m_type;
+
+  KeyCaption getUSKeyCaption() const
+  {
+    switch (m_type)
+    {
+      case GLFW_TYPE_KEYBOARD_KEY:
+      {
+        switch (m_code)
+        {
+          case GLFW_KEY_LEFT: return KEYBOARD_ARROW_LEFT;
+          case GLFW_KEY_RIGHT: return KEYBOARD_ARROW_RIGHT;
+          case GLFW_KEY_UP: return KEYBOARD_ARROW_UP;
+          case GLFW_KEY_DOWN: return KEYBOARD_ARROW_DOWN;
+          default:
+          {
+            throw GlException("No caption for this key");
+          }
+        }
+      }
+      case GLFW_TYPE_KEYBOARD_SCANCODE:
+      {
+        throw GlException("Cannot get caption for a key's scancode");
+      }
+      case GLFW_TYPE_MOUSE_BUTTON:
+      {
+        switch (m_code)
+        {
+          case GLFW_MOUSE_BUTTON_LEFT: return MOUSE_LEFT;
+          case GLFW_MOUSE_BUTTON_RIGHT: return MOUSE_RIGHT;
+          default:
+          {
+            throw GlException("No caption for this key");
+          }
+        }
+      }
+      default:
+      {
+        ASSERT(false, "Invalid key type");
+        return KEY_CAPTION_NUM;
+      }
+    }
+  }
 };
 
 class GlfwWindow : public RenderTarget, public View, public Controller<GlfwKey>

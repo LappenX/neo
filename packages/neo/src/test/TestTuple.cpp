@@ -15,7 +15,6 @@ BOOST_AUTO_TEST_CASE(tuple_elements)
   BOOST_CHECK(tuple.get<1>() == 3.0f);
 }
 
-
 BOOST_AUTO_TEST_CASE(nth_element)
 {
   BOOST_CHECK(tuple::nth_element<0>::get(1, 2.0f, 'c') == 1);

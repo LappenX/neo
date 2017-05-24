@@ -86,7 +86,7 @@ int main (int argc, char* argv[])
                         );*/
 
   window.getKeyPressEvent() += [&](gl::GlfwKey key, bool down){
-    camera_pos.set(glm::vec3(0, 0, camera_pos.get().z - 1));
+    
   };
 
   gl::RenderContext context;

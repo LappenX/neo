@@ -11,6 +11,8 @@
                                         CLASS(const CLASS __VA_ARGS__ &) = delete;
 #define TVALUE(TYPE, NAME, ...) struct NAME {static const TYPE value = __VA_ARGS__;};
 #define RETURN_AUTO(...) -> decltype(__VA_ARGS__) {return __VA_ARGS__;}
+#define ENABLE_IF(...) typename = typename std::enable_if<__VA_ARGS__, void>::type
+#define ENABLE_IF_ARE_SIZE_T(...) ENABLE_IF(tmp::type_sequence::all_apply_v<tmp::type_sequence::pred::is_convertible_to<size_t>, tmp::type_sequence::Sequence<__VA_ARGS__>>::value)
 
 
 namespace util {
