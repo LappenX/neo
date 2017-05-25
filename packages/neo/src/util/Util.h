@@ -13,7 +13,8 @@
 #define RETURN_AUTO(...) -> decltype(__VA_ARGS__) {return __VA_ARGS__;}
 #define ENABLE_IF(...) typename = typename std::enable_if<__VA_ARGS__, void>::type
 #define ENABLE_IF_ARE_SIZE_T(...) ENABLE_IF(tmp::type_sequence::all_apply_v<tmp::type_sequence::pred::is_convertible_to<size_t>, tmp::type_sequence::Sequence<__VA_ARGS__>>::value)
-
+namespace util {struct EmptyDefaultType {};}
+#define WITH_DEFAULT_TYPE(TYPE, DEFAULT) typename std::conditional<std::is_same<TYPE, util::EmptyDefaultType>::value, DEFAULT, TYPE>::type
 
 namespace util {
 

@@ -64,4 +64,31 @@ struct ConstParamTensorHelper
   }
 };
 
+struct NonConstParamTensorHelper
+{
+  template <typename TTensorType, typename TElementType, size_t... TDims>
+  static TTensorType& deduce(Tensor<TTensorType, TElementType, TDims...>&)
+  {
+    return std::declval<TTensorType&>();
+  }
+
+  template <typename TTensorType, typename TElementType, size_t... TDims>
+  static TTensorType deduce(Tensor<TTensorType, TElementType, TDims...>&&)
+  {
+    return std::declval<TTensorType>();
+  }
+
+  template <typename TTensorType, typename TElementType, size_t... TDims>
+  static const TTensorType& deduce(const Tensor<TTensorType, TElementType, TDims...>&)
+  {
+    return std::declval<const TTensorType&>();
+  }
+
+  template <typename TTensorType, typename TElementType, size_t... TDims>
+  static TTensorType deduce(const Tensor<TTensorType, TElementType, TDims...>&&)
+  {
+    return std::declval<TTensorType>();
+  }
+};
+
 } // end of ns detail

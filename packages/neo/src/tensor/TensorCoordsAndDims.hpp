@@ -63,7 +63,8 @@ TVALUE(size_t, nth_dimension_v, DimsHelper<TDimSeq>::nth_dimension(N))
 template <typename TDimSeq>
 TVALUE(size_t, non_trivial_dimensions_num_v, detail::DimsHelper<TDimSeq>::non_trivial_dimensions_num());
 
-
+template <typename TDimSeq>
+TVALUE(size_t, is_static_dimseq_v, detail::DimsHelper<TDimSeq>::are_static_dims());
 
 
 
@@ -415,3 +416,26 @@ void copyDims(TVectorType1&& dest, TSrcDimArgs&&... src)
 {
   detail::copyDims(dest, util::forward<TSrcDimArgs>(src)...);
 }
+
+
+
+
+
+namespace detail {
+
+template <typename... TTensorTypes>
+struct GetStaticDimSeqFromTensors;
+
+template <typename TTensorType0, typename TTensorType1, typename... TTensorTypes>
+struct GetStaticDimSeqFromTensors<TTensorType0, TTensorType1, TTensorTypes...>
+{
+  using type = typename std::conditional<is_static_dimseq_v<tensor_dimseq_t<TTensorType0>>::value, tensor_dimseq_t<TTensorType0>, typename GetStaticDimSeqFromTensors<TTensorType1, TTensorTypes...>::type>::type;
+};
+
+template <typename TTensorType0>
+struct GetStaticDimSeqFromTensors<TTensorType0>
+{
+  using type = tensor_dimseq_t<TTensorType0>;
+};
+
+} // end of ns detail

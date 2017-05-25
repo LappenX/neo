@@ -46,6 +46,9 @@ TVALUE(bool, is_matrix_v, non_trivial_dimensions_num_v<tensor_dimseq_t<TTensorTy
 template <typename T>
 TVALUE(bool, is_dimseq_v, detail::IsDimSeq<T>::value)
 
+template <typename... TTensorTypes>
+using static_dimseq_from_tensors_t = typename detail::GetStaticDimSeqFromTensors<TTensorTypes...>::type;
+
 template <typename... TVectorTypes>
 __host__ __device__
 bool areSameDimensions(TVectorTypes&&... dims);

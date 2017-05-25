@@ -22,6 +22,26 @@ public:
   {
     // TODO: ASSERT dims satisfies TDims... (rest equals 1)
   }
+
+  template <size_t TIndex>
+  __host__ __device__
+  size_t dim() const
+  {
+    return static_cast<const TThisType*>(this)->template dyn_dim<TIndex>();
+  }
+
+  __host__ __device__
+  size_t dim(size_t index) const
+  {
+    return static_cast<const TThisType*>(this)->dyn_dim(index);
+  }
+
+  template <size_t TLength = non_trivial_dimensions_num_v<DimSeq<TDims...>>::value>
+  __host__ __device__
+  VectorXs<TLength> dims() const
+  {
+    return static_cast<const TThisType*>(this)->template dyn_dims<TLength>();
+  }
 };
 
 template <typename TThisType, typename TElementType, size_t... TDims>
@@ -41,20 +61,20 @@ public:
 
   template <size_t TIndex>
   __host__ __device__
-  size_t dim() const
+  size_t dyn_dim() const
   {
     return getNthDimension<TIndex>(m_dims);
   }
 
   __host__ __device__
-  size_t dim(size_t index) const
+  size_t dyn_dim(size_t index) const
   {
     return math::lt(index, non_trivial_dimensions_num_v<DimSeq<TDims...>>::value) ? m_dims(index) : 1;
   }
 
   template <size_t TLength = non_trivial_dimensions_num_v<DimSeq<TDims...>>::value>
   __host__ __device__
-  VectorXs<TLength> dims() const
+  VectorXs<TLength> dyn_dims() const
   { // TODO: no new vector when length equals saved length
     ASSERT(math::gte(TLength, getNonTrivialDimensionsNum(m_dims)), "Non-trivial dimensions are cut off");
     return vectorSizeHelper<TLength>(tmp::value_sequence::ascending_numbers_t<TLength>());

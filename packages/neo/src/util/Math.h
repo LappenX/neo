@@ -43,8 +43,11 @@ struct Consts
     RETURN_AUTO(EXPRESSION) \
   }; \
   }
-
-#define OPERATION_V2(NAME, EXPRESSION_1, EXPRESSION_2, EXPRESSION_N) \
+// TODO: no type in OPERATION_V2 EXPRESSION_0 function?
+#define OPERATION_V2(NAME, EXPRESSION_0, EXPRESSION_1, EXPRESSION_2, EXPRESSION_N) \
+  __host__ __device__ \
+  constexpr auto NAME() \
+  RETURN_AUTO(EXPRESSION_0) \
   template <typename T> \
   __host__ __device__ \
   constexpr auto NAME(T x) \
@@ -86,9 +89,9 @@ struct Consts
   }; \
   }
 
-OPERATION_V2(add, x, x1 + x2, x1 + math::add(x2, x3, rest...))
+OPERATION_V2(add, 0, x, x1 + x2, x1 + math::add(x2, x3, rest...))
 OPERATION_TT(subtract, x1 - x2)
-OPERATION_V2(multiply, x, x1 * x2, x1 * math::multiply(x2, x3, rest...))
+OPERATION_V2(multiply, 1, x, x1 * x2, x1 * math::multiply(x2, x3, rest...))
 OPERATION_TT(divide, x1 / x2)
 OPERATION_T(negate, -x)
 
@@ -102,6 +105,9 @@ OPERATION_TT(gt, (x1 > x2))
 OPERATION_TT(gte, (x1 >= x2))
 OPERATION_V1(min, x, (x1 < x2 ? math::min(x1, rest...) : math::min(x2, rest...)))
 OPERATION_V1(max, x, (x1 > x2 ? math::max(x1, rest...) : math::max(x2, rest...)))
+
+OPERATION_V2(land, true, x, x1 && x2, x1 && math::add(x2, x3, rest...))
+OPERATION_V2(lor, false, x, x1 || x2, x1 || math::add(x2, x3, rest...))
 
 OPERATION_T(sqrt, (T) ::sqrt(x))
 OPERATION_T(ln, (T) ::log(x))

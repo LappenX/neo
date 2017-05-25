@@ -216,17 +216,16 @@ public:
 
   template <size_t TLength = non_trivial_dimensions_num_v<DimSeq>::value>
   __host__ __device__
-  VectorXs<TLength> dims() const
+  VectorXs<TLength> dyn_dims() const
   {
-    return dimsHelper<TLength>(tmp::value_sequence::ascending_numbers_t<TLength>());
+    return dimsHelper(tmp::value_sequence::ascending_numbers_t<TLength>());
   }
 
   template <size_t TIndex>
   __host__ __device__
-  size_t dim() const
+  size_t dyn_dim() const
   {
-    return detail::StaticOrDynamicReducedDimHelper<
-                      is_static_dimseq_v<DimSeq>::value,
+    return detail::DynamicReducedDimHelper<
                       TIndex,
                       tensor_dimseq_t<TTensorTypeIn>,
                       TReducedDimsAsSeq
@@ -234,20 +233,20 @@ public:
   }
 
   __host__ __device__
-  size_t dim(size_t index) const
+  size_t dyn_dim(size_t index) const
   {
     // TODO: more efficient
-    return dims()(index);
+    return dyn_dims()(index);
   }
 
 private:
   TTensorTypeIn m_tensor;
 
-  template <size_t TLength, size_t... TIndices>
+  template <size_t... TIndices>
   __host__ __device__
-  VectorXs<TLength> dimsHelper(tmp::value_sequence::Sequence<size_t, TIndices...>) const
+  VectorXs<sizeof...(TIndices)> dimsHelper(tmp::value_sequence::Sequence<size_t, TIndices...>) const
   {
-    return VectorXs<TLength>(detail::StaticReducedDimHelper<TIndices, tensor_dimseq_t<TTensorTypeIn>, TReducedDimsAsSeq>::value...);
+    return VectorXs<sizeof...(TIndices)>(detail::DynamicReducedDimHelper<TIndices, tensor_dimseq_t<TTensorTypeIn>, TReducedDimsAsSeq>::get(m_tensor)...);
   }
 };
 
@@ -294,8 +293,7 @@ public:
   __host__ __device__
   TResultType get() const
   {
-    ASSERT(!m_is_first, "Accumulator has visited no elements yet");
-    return m_value;
+    return m_is_first ? TFunctor()() : m_value;
   }
 
 private:
@@ -311,30 +309,46 @@ private:
 
 
 
-
-
-
-
-template <typename TTensorType, ENABLE_IF(is_tensor_v<TTensorType>::value)>
+template <typename TElementType, typename TFunctor, typename TTensorType, ENABLE_IF(is_tensor_v<TTensorType>::value)>
 __host__ __device__
-tensor_elementtype_t<TTensorType> sum(TTensorType&& tensor)
-{
-  return ReductionTensor<
-              acc::BinOpAcc<tensor_elementtype_t<TTensorType>, math::functor::add>,
+auto reduceAll(TTensorType&& tensor)
+RETURN_AUTO(
+  ReductionTensor<
+              acc::BinOpAcc<TElementType, TFunctor>,
               const_param_tensor_t<TTensorType&&>,
               tmp::value_sequence::ascending_numbers_t<non_trivial_dimensions_num_v<tensor_dimseq_t<TTensorType>>::value>
-            >(util::forward<TTensorType>(tensor))();
-}
+            >(util::forward<TTensorType>(tensor))
+)
 
-template <typename TTensorType, ENABLE_IF(is_tensor_v<TTensorType>::value)>
+template <typename TElementType, typename TFunctor, size_t... TReducedDims, typename TTensorType, ENABLE_IF(is_tensor_v<TTensorType>::value)>
 __host__ __device__
-tensor_elementtype_t<TTensorType> prod(TTensorType&& tensor)
-{
-  return ReductionTensor<
-              acc::BinOpAcc<tensor_elementtype_t<TTensorType>, math::functor::multiply>,
+auto reduce(TTensorType&& tensor)
+RETURN_AUTO(
+  ReductionTensor<
+              acc::BinOpAcc<TElementType, TFunctor>,
               const_param_tensor_t<TTensorType&&>,
-              tmp::value_sequence::ascending_numbers_t<non_trivial_dimensions_num_v<tensor_dimseq_t<TTensorType>>::value>
-            >(util::forward<TTensorType>(tensor))();
-}
+              tmp::value_sequence::Sequence<size_t, TReducedDims...>
+            >(util::forward<TTensorType>(tensor))
+)
+
+template <typename TElementType = util::EmptyDefaultType, typename TTensorType, ENABLE_IF(is_tensor_v<TTensorType>::value)>
+__host__ __device__
+auto sum(TTensorType&& tensor)
+RETURN_AUTO(reduceAll<WITH_DEFAULT_TYPE(TElementType, tensor_elementtype_t<TTensorType>), math::functor::add>(tensor)())
+
+template <typename TElementType = util::EmptyDefaultType, typename TTensorType, ENABLE_IF(is_tensor_v<TTensorType>::value)>
+__host__ __device__
+auto prod(TTensorType&& tensor)
+RETURN_AUTO(reduceAll<WITH_DEFAULT_TYPE(TElementType, tensor_elementtype_t<TTensorType>), math::functor::multiply>(tensor)())
+
+template <typename TElementType = util::EmptyDefaultType, typename TTensorType, ENABLE_IF(is_tensor_v<TTensorType>::value)>
+__host__ __device__
+auto all(TTensorType&& tensor)
+RETURN_AUTO(reduceAll<WITH_DEFAULT_TYPE(TElementType, tensor_elementtype_t<TTensorType>), math::functor::land>(tensor)())
+
+template <typename TElementType = util::EmptyDefaultType, typename TTensorType, ENABLE_IF(is_tensor_v<TTensorType>::value)>
+__host__ __device__
+auto any(TTensorType&& tensor)
+RETURN_AUTO(reduceAll<WITH_DEFAULT_TYPE(TElementType, tensor_elementtype_t<TTensorType>), math::functor::lor>(tensor)())
 
 } // end of ns tensor

@@ -17,5 +17,7 @@
 #include "DynamicTensor.h"
 #include "TensorIndexStrategy.h"
 #include "ReductionTensor.h"
+#include "BroadcastingTensor.h"
+#include "ElwiseOperationTensor.h"
 
 #endif // TENSOR_H

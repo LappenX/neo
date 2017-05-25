@@ -2,15 +2,8 @@
 
 using namespace tensor;
 
-#include <iostream>
+#include <iostream> // TODO: remove
 
-struct s
-{
-  s()
-    : data(new int[1])
-  {}
-  int* data;
-};
 
 
 TEST_CASE(storage_tensor_values)
@@ -47,27 +40,33 @@ TEST_CASE(tensor_reduction_and_broadcasting)
   Matrix34d md(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0);
   CHECK(sum(md) == 1.0 + 2.0 + 3.0 + 4.0 + 5.0 + 6.0 + 7.0 + 8.0 + 9.0 + 10.0 + 11.0 + 12.0);
   CHECK(prod(md) == 1.0 * 2.0 * 3.0 * 4.0 * 5.0 * 6.0 * 7.0 * 8.0 * 9.0 * 10.0 * 11.0 * 12.0);
-  //CHECK((reduce<visitor::Sum<double>, 1>(md) == Vector3d(22, 26, 30)).all());
-  //CHECK((reduce<visitor::Sum<double>, 0>(md) == MatrixXXd<1, 4>(6, 15, 24, 33)).all());
+  CHECK(all(reduce<double, math::functor::add, 1>(md) == Vector3d(22, 26, 30)));
+  CHECK(all(reduce<double, math::functor::add, 0>(md) == MatrixXXd<1, 4>(6, 15, 24, 33)));
 
-  //CHECK((broadcast<3, 3>(vui) == MatrixXXui<3, 3>(1, 2, 3, 1, 2, 3, 1, 2, 3)).all());
-  //CHECK((broadcast<3, DYN>(vui, 3, 3) == MatrixXXui<3, 3>(1, 2, 3, 1, 2, 3, 1, 2, 3)).all());
+  CHECK(all(broadcast<3, 3>(vui) == MatrixXXui<3, 3>(1, 2, 3, 1, 2, 3, 1, 2, 3)));
+  CHECK(all(broadcast<3, DYN>(vui, 3, 3) == MatrixXXui<3, 3>(1, 2, 3, 1, 2, 3, 1, 2, 3)));
 }
 
-/*
 TEST_CASE(tensor_equality)
 {
   Vector3ui vui1(1, 2, 3);
   Vector3ui vui2(1, 2, 4);
-  CHECK((vui1 == vui1).all());
-  CHECK((vui1 != vui2).any());
+  CHECK(all(vui1 == vui1));
+  CHECK(any(vui1 != vui2));
 
   Matrix34d md1(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0);
   Matrix34d md2(1.1, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0);
-  CHECK((md1 == md1).all());
-  CHECK((md1 != md2).any());
+  CHECK(all(md1 == md1));
+  CHECK(any(md1 != md2));
 }
 
+TEST_CASE(elwise_operations)
+{
+  CHECK(all(Vector3ui(1, 2, 3) + Vector3ui(1, 2, 3) == Vector3ui(2, 4, 6)));
+  CHECK(all(Vector3ui(1, 2, 3) + 1 == Vector3ui(2, 3, 4)));
+  CHECK(all(2 + Vector3ui(1, 2, 3) == Vector3ui(3, 4, 5)));
+}
+/*
 TEST_CASE(tensor_index_strategy)
 {
   CHECK((ColMajorIndexStrategy::fromIndex<11, 4, 8>(ColMajorIndexStrategy::toIndex<11, 4, 8>(5, 3, 7)) == Vector3s(5, 3, 7)).all());
@@ -97,13 +96,6 @@ TEST_CASE(special_tensor_constants)
   CHECK((unit_vector::type<double>::length<DYN>::static_direction<2>::make(4) == Vector4d(0.0, 0.0, 1.0, 0.0)).all());
   CHECK((unit_vector::type<double>::length<4>::dynamic_direction::make(2) == Vector4d(0.0, 0.0, 1.0, 0.0)).all());
   CHECK((unit_vector::type<double>::length<DYN>::dynamic_direction::make(2, 4) == Vector4d(0.0, 0.0, 1.0, 0.0)).all());
-}
-
-TEST_CASE(elwise_operations)
-{
-  CHECK((Vector3ui(1, 2, 3) + Vector3ui(1, 2, 3) == Vector3ui(2, 4, 6)).all());
-  CHECK((Vector3ui(1, 2, 3) + 1 == Vector3ui(2, 3, 4)).all());
-  CHECK((2 + Vector3ui(1, 2, 3) == Vector3ui(3, 4, 5)).all());
 }
 
 TEST_CASE(tensor_reference)

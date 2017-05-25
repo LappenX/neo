@@ -55,7 +55,8 @@ TVALUE(bool, is_tensor_v, decltype(detail::IsTensorHelper::deduce(std::declval<T
 
 template <typename TTensorType>
 using const_param_tensor_t = decltype(detail::ConstParamTensorHelper::deduce(std::declval<TTensorType>()));
-
+template <typename TTensorType>
+using non_const_param_tensor_t = decltype(detail::NonConstParamTensorHelper::deduce(std::declval<TTensorType>()));
 
 
 
@@ -67,6 +68,8 @@ class DynamicTensor;
 template <typename TThisType, typename TElementType, size_t... TDims>
 class DynamicTensorStoreDimensions;
 
+template <typename TThisType, typename TElementType>
+using Singleton = Tensor<TThisType, TElementType>;
 template <typename TThisType, typename TElementType, size_t TDim0>
 using Vector = Tensor<TThisType, TElementType, TDim0>;
 template <typename TThisType, typename TElementType, size_t TRows, size_t TCols>
@@ -169,6 +172,9 @@ using Vector1s = VectorXs<1>;
 using Vector2s = VectorXs<2>;
 using Vector3s = VectorXs<3>;
 using Vector4s = VectorXs<4>;
+
+template <typename TElementType, typename TIndexStrategy = DefaultIndexStrategy>
+using SingletonT = DenseLocalStorageTensor<TElementType, TIndexStrategy>;
 
 
 
