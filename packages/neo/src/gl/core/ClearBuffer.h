@@ -4,7 +4,6 @@
 #include <Common.h>
 
 #include "../RenderStep.h"
-#include "../Glm.h"
 #include "../GlError.h"
 
 #include <GL/glew.h>
@@ -15,20 +14,20 @@ namespace gl {
 class ClearColorBuffer : public UnRenderStep
 {
 public:
-  ClearColorBuffer(glm::vec4 color)
+  ClearColorBuffer(tensor::Vector4f color)
     : m_color(color)
   {
   }
 
   void render(RenderContext& context)
   {
-    glClearColor(m_color[0], m_color[1], m_color[2], m_color[3]);
+    glClearColor(m_color(0), m_color(1), m_color(2), m_color(3));
     glClear(GL_COLOR_BUFFER_BIT);
     GL_CHECK_ERROR("Failed to clear color buffer");
   }
 
 private:
-  glm::vec4 m_color;
+  tensor::Vector4f m_color;
 };
 
 } // gl

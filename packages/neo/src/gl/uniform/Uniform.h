@@ -5,8 +5,8 @@
 
 #include "../core/Shader.h"
 #include "../RenderStep.h"
-#include "../Glm.h"
 #include <util/Property.h>
+#include <tensor/Tensor.h>
 
 #include <memory>
 
@@ -30,17 +30,16 @@ class GlUniform;
   }
 
 // https://www.khronos.org/opengles/sdk/docs/man/xhtml/glUniform.xml
-UNIFORM_MACRO(float, glUniform1f(location, value));
-UNIFORM_MACRO(glm::vec2, glUniform2fv(location, 1, &value[0]));
-UNIFORM_MACRO(glm::vec3, glUniform3fv(location, 1, &value[0]));
-UNIFORM_MACRO(glm::vec4, glUniform4fv(location, 1, &value[0]));
-UNIFORM_MACRO(glm::mat2, glUniformMatrix2fv(location, 1, GL_FALSE, &value[0][0]));
-UNIFORM_MACRO(glm::mat3, glUniformMatrix3fv(location, 1, GL_FALSE, &value[0][0]));
-UNIFORM_MACRO(glm::mat4, glUniformMatrix4fv(location, 1, GL_FALSE, &value[0][0]));
-UNIFORM_MACRO(GLint, glUniform1i(location, value));
-UNIFORM_MACRO(glm::ivec2, glUniform2iv(location, 1, &value[0]));
-UNIFORM_MACRO(glm::ivec3, glUniform3iv(location, 1, &value[0]));
-UNIFORM_MACRO(glm::ivec4, glUniform4iv(location, 1, &value[0]));
+
+UNIFORM_MACRO(tensor::Vector1f, glUniform1fv(location, 1, value.storage().ptr()));
+UNIFORM_MACRO(tensor::Vector2f, glUniform2fv(location, 1, value.storage().ptr()));
+UNIFORM_MACRO(tensor::Vector3f, glUniform3fv(location, 1, value.storage().ptr()));
+UNIFORM_MACRO(tensor::Vector4f, glUniform4fv(location, 1, value.storage().ptr()));
+
+UNIFORM_MACRO(tensor::Matrix1f, glUniform1fv(location, 1, value.storage().ptr()));
+UNIFORM_MACRO(tensor::Matrix2f, glUniformMatrix2fv(location, 1, false, value.storage().ptr()));
+UNIFORM_MACRO(tensor::Matrix3f, glUniformMatrix3fv(location, 1, false, value.storage().ptr()));
+UNIFORM_MACRO(tensor::Matrix4f, glUniformMatrix4fv(location, 1, false, value.storage().ptr()));
 
 } // end of ns detail
 

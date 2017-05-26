@@ -6,7 +6,7 @@
 
 #include <util/Assert.h>
 
-#ifdef __CUDA_CC__
+#ifdef __CUDACC__
 
 #define TEST_CASE(NAME) \
   __global__ void kernel_##NAME##_test(); \

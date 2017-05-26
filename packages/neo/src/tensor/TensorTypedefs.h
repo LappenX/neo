@@ -1,9 +1,13 @@
 #include "Tensor.h"
-
+// TODO: combine Typedefs and CoordsAndDims files
 namespace tensor {
 
 class ColMajorIndexStrategy;
+#ifdef DEFAULT_TENSOR_INDEX_STRATEGY
+using DefaultIndexStrategy = DEFAULT_TENSOR_INDEX_STRATEGY;
+#else
 using DefaultIndexStrategy = ColMajorIndexStrategy;
+#endif
 
 #define ENABLE_IF_SUPERTENSOR_CONSTRUCTIBLE(...) ENABLE_IF(std::is_constructible<SuperType, __VA_ARGS__>::value)
 
@@ -31,6 +35,25 @@ struct TensorTraits;
     copy<copier::LocalElwise>(*this, other); \
     return *this; \
   }
+#define TENSOR_DIMS_IMPL_FROM_IND(NAME) \
+  template <size_t TLength> \
+  __host__ __device__ \
+  VectorXs<TLength> NAME() const \
+  { \
+    return dims_impl_helper(tmp::value_sequence::ascending_numbers_t<TLength>()); \
+  } \
+  private: \
+  template <size_t... TIndices> \
+  __host__ __device__ \
+  VectorXs<sizeof...(TIndices)> dims_impl_helper(tmp::value_sequence::Sequence<size_t, TIndices...>) const \
+  { \
+    return VectorXs<sizeof...(TIndices)>(this->template dim_impl<TIndices>()...); \
+  } \
+  public:
+// TODO: implement TENSOR_DYN_DIMS_IMPL_FROM_IND in base class, not separately in every special class; bool flag
+
+
+
 
 namespace detail {
 
@@ -54,9 +77,11 @@ template <typename TType>
 TVALUE(bool, is_tensor_v, decltype(detail::IsTensorHelper::deduce(std::declval<TType>()))::value)
 
 template <typename TTensorType>
-using const_param_tensor_t = decltype(detail::ConstParamTensorHelper::deduce(std::declval<TTensorType>()));
+using const_param_tensor_store_t = decltype(detail::ConstParamTensorStoreHelper::deduce(std::declval<TTensorType>()));
 template <typename TTensorType>
-using non_const_param_tensor_t = decltype(detail::NonConstParamTensorHelper::deduce(std::declval<TTensorType>()));
+using non_const_param_tensor_store_t = decltype(detail::NonConstParamTensorStoreHelper::deduce(std::declval<TTensorType>()));
+template <typename TTensorType>
+using param_tensor_forward_t = decltype(detail::ParamTensorForwardHelper::deduce(std::declval<TTensorType>()));
 
 
 
@@ -133,11 +158,14 @@ using Matrix13f = MatrixXXf<1, 3>;
 using Matrix14f = MatrixXXf<1, 4>;
 using Matrix34f = MatrixXXf<3, 4>;
 
+using Matrix1f = MatrixXf<1>;
 using Matrix2f = MatrixXf<2>;
 using Matrix3f = MatrixXf<3>;
 using Matrix4f = MatrixXf<4>;
 
 using Matrix13d = MatrixXXd<1, 3>;
+using Matrix23d = MatrixXXd<2, 3>;
+using Matrix32d = MatrixXXd<3, 2>;
 using Matrix34d = MatrixXXd<3, 4>;
 
 using Matrix2d = MatrixXd<2>;

@@ -4,7 +4,6 @@
 #include <Common.h>
 
 #include <util/FastStack.h>
-#include "Glm.h"
 #include "GlError.h"
 
 namespace gl {

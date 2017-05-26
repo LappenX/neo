@@ -112,7 +112,7 @@ struct nth_element
   template <typename TFirst, typename... TRest>
   __host__ __device__
   static auto get(TFirst&& first, TRest&&... rest)
-    RETURN_AUTO(nth_element<I - 1>::get(util::forward<TRest>(rest)...))
+  RETURN_AUTO(nth_element<I - 1>::get(util::forward<TRest>(rest)...))
 };
 
 template <>
@@ -121,7 +121,29 @@ struct nth_element<0>
   template <typename TFirst, typename... TRest>
   __host__ __device__
   static auto get(TFirst&& first, TRest&&... rest)
-    RETURN_AUTO(util::forward<TFirst>(first))
+  RETURN_AUTO(util::forward<TFirst>(first))
+};
+
+
+
+
+
+template <bool TBool>
+struct conditional
+{
+  template <typename TIfTrue, typename TIfFalse>
+  __host__ __device__
+  static auto get(TIfTrue&& if_true, TIfFalse&& if_false)
+  RETURN_AUTO(util::forward<TIfTrue>(if_true))
+};
+
+template <>
+struct conditional<false>
+{
+  template <typename TIfTrue, typename TIfFalse>
+  __host__ __device__
+  static auto get(TIfTrue&& if_true, TIfFalse&& if_false)
+  RETURN_AUTO(util::forward<TIfFalse>(if_false))
 };
 
 

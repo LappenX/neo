@@ -358,8 +358,11 @@ void copyDims(TVectorType1&& dest, TSrcDimArgs&&... src)
 {
   const size_t DEST_DIM_NUM = nth_dimension_v<0, tensor_dimseq_t<tensor_clean_t<TVectorType1>>>::value;
   const size_t SRC_DIM_NUM = tensor::getCoordinateNum<TSrcDimArgs...>();
+
+  const bool DEST_IN_RANGE = I < DEST_DIM_NUM;
+  const bool SRC_IN_RANGE = I < SRC_DIM_NUM;
   
-  detail::CopyDimHelper<math::lt(I, DEST_DIM_NUM), math::lt(I, SRC_DIM_NUM)>::template copy<I>(dest, util::forward<TSrcDimArgs>(src)...);
+  detail::CopyDimHelper<DEST_IN_RANGE, SRC_IN_RANGE>::template copy<I>(dest, util::forward<TSrcDimArgs>(src)...);
 }
 
 template <bool TDestInRange, bool TSrcInRange>
@@ -439,3 +442,42 @@ struct GetStaticDimSeqFromTensors<TTensorType0>
 };
 
 } // end of ns detail
+
+
+
+
+
+namespace detail {
+
+template <size_t I>
+struct CoordsAreInRangeHelper
+{
+  template <typename TTensorType, typename... TCoordArgTypes>
+  __host__ __device__
+  static bool get(TTensorType&& tensor, TCoordArgTypes&&... coords)
+  {
+    return getNthCoordinate<I - 1>(util::forward<TCoordArgTypes>(coords)...) < tensor.template dim<I - 1>()
+            && CoordsAreInRangeHelper<I - 1>::get(util::forward<TTensorType>(tensor), util::forward<TCoordArgTypes>(coords)...);
+  }
+};
+
+template <>
+struct CoordsAreInRangeHelper<0>
+{
+  template <typename TTensorType, typename... TCoordArgTypes>
+  __host__ __device__
+  static bool get(TTensorType&& tensor, TCoordArgTypes&&... coords)
+  {
+    return true;
+  }
+};
+
+} // end of ns detail
+
+template <typename TTensorType, typename... TCoordArgTypes>
+__host__ __device__
+bool coordsAreInRange(TTensorType&& tensor, TCoordArgTypes&&... coords)
+{
+  return detail::CoordsAreInRangeHelper<getCoordinateNum<TCoordArgTypes...>()>::get
+            (util::forward<TTensorType>(tensor), util::forward<TCoordArgTypes>(coords)...);
+}

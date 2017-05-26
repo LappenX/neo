@@ -61,6 +61,10 @@ template <typename TVectorType1, typename... TSrcDimArgs>
 __host__ __device__
 void copyDims(TVectorType1&& dest, TSrcDimArgs&&... src);
 
+template <typename TTensorType, typename... TCoordArgTypes>
+__host__ __device__
+bool coordsAreInRange(TTensorType&& tensor, TCoordArgTypes&&... coords);
+
 
 
 

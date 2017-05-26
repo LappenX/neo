@@ -3,6 +3,7 @@
 
 #include <Common.h>
 
+#include <util/DeviceCout.h>
 
 
 #ifdef DEBUG
@@ -23,21 +24,39 @@
 
 namespace detail {
 
+class AssertCout;
+
+#ifndef __CUDA_ARCH__
+
 class AssertCout
 {
 public:
   template <typename T>
   __host__ __device__
-  AssertCout& operator<<(T object);
+  AssertCout& operator<<(T object)
+  {
+    std::cout << object;
+    return *this;
+  }
 };
 
-#ifndef __CUDA_ARCH__
-template <typename T>
-__host__ __device__
-AssertCout& AssertCout::operator<<(T object)
+#else
+
+class AssertCout
 {
-  std::cout << object;
-}
+public:
+  template <typename T>
+  __host__ __device__
+  AssertCout& operator<<(T object)
+  {
+    m_cout<< object;
+    return *this;
+  }
+
+private:
+  util::DeviceCout m_cout;
+};
+
 #endif
 
 } // end of ns detail
@@ -63,7 +82,7 @@ AssertCout& AssertCout::operator<<(T object)
       cudaError_t err = cudaGetLastError(); \
       if (err != cudaSuccess) \
       { \
-        ::detail::AssertCout() << "\nCuda safe call '" << #__VA_ARGS__ << "' failed in " << __FILE__ << ":" << __LINE__ << "!\nErrCode" << err << "\n" << cudaGetErrorString(err); \
+        ::detail::AssertCout() << "\nCuda safe call '" << #__VA_ARGS__ << "' failed in " << __FILE__ << ":" << __LINE__ << "!\nErrCode" << err << "\n" << cudaGetErrorString(err) << "\n"; \
         EXIT; \
       } \
     } while(false)

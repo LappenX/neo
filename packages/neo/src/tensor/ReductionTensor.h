@@ -196,7 +196,7 @@ public:
 
   template <typename... TCoordArgTypes>
   __host__ __device__
-  ElementType operator()(TCoordArgTypes&&... coords) const
+  ElementType get_element_impl(TCoordArgTypes&&... coords) const
   {
     TRedOp op;
     detail::ReductionHelper<tmp::value_sequence::contains_v<
@@ -214,16 +214,9 @@ public:
     return op.get();
   }
 
-  template <size_t TLength = non_trivial_dimensions_num_v<DimSeq>::value>
-  __host__ __device__
-  VectorXs<TLength> dyn_dims() const
-  {
-    return dimsHelper(tmp::value_sequence::ascending_numbers_t<TLength>());
-  }
-
   template <size_t TIndex>
   __host__ __device__
-  size_t dyn_dim() const
+  size_t dyn_dim_impl() const
   {
     return detail::DynamicReducedDimHelper<
                       TIndex,
@@ -233,21 +226,16 @@ public:
   }
 
   __host__ __device__
-  size_t dyn_dim(size_t index) const
+  size_t dyn_dim_impl(size_t index) const
   {
-    // TODO: more efficient
-    return dyn_dims()(index);
+    // TODO: more efficient, struct Contains for static set and dynamic el
+    return this->dyn_dims()(index);
   }
+
+  TENSOR_DIMS_IMPL_FROM_IND(dyn_dims_impl)
 
 private:
   TTensorTypeIn m_tensor;
-
-  template <size_t... TIndices>
-  __host__ __device__
-  VectorXs<sizeof...(TIndices)> dimsHelper(tmp::value_sequence::Sequence<size_t, TIndices...>) const
-  {
-    return VectorXs<sizeof...(TIndices)>(detail::DynamicReducedDimHelper<TIndices, tensor_dimseq_t<TTensorTypeIn>, TReducedDimsAsSeq>::get(m_tensor)...);
-  }
 };
 
 template <typename TRedOp, typename TTensorTypeIn, typename TReducedDimsAsSeq>
@@ -315,9 +303,9 @@ auto reduceAll(TTensorType&& tensor)
 RETURN_AUTO(
   ReductionTensor<
               acc::BinOpAcc<TElementType, TFunctor>,
-              const_param_tensor_t<TTensorType&&>,
+              const_param_tensor_store_t<TTensorType&&>,
               tmp::value_sequence::ascending_numbers_t<non_trivial_dimensions_num_v<tensor_dimseq_t<TTensorType>>::value>
-            >(util::forward<TTensorType>(tensor))
+            >(static_cast<param_tensor_forward_t<TTensorType&&>>(tensor))
 )
 
 template <typename TElementType, typename TFunctor, size_t... TReducedDims, typename TTensorType, ENABLE_IF(is_tensor_v<TTensorType>::value)>
@@ -326,9 +314,9 @@ auto reduce(TTensorType&& tensor)
 RETURN_AUTO(
   ReductionTensor<
               acc::BinOpAcc<TElementType, TFunctor>,
-              const_param_tensor_t<TTensorType&&>,
+              const_param_tensor_store_t<TTensorType&&>,
               tmp::value_sequence::Sequence<size_t, TReducedDims...>
-            >(util::forward<TTensorType>(tensor))
+            >(static_cast<param_tensor_forward_t<TTensorType&&>>(tensor))
 )
 
 template <typename TElementType = util::EmptyDefaultType, typename TTensorType, ENABLE_IF(is_tensor_v<TTensorType>::value)>

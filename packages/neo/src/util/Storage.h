@@ -127,6 +127,10 @@ public:
   __host__ __device__
   constexpr LocalStorage()
     : m_data{}
+#ifdef __CUDA_ARCH__
+    // TODO: see below
+    , m_dummy(true)
+#endif
   {
   }
 
@@ -135,6 +139,10 @@ public:
   __host__ __device__
   constexpr LocalStorage(TValue0 arg0, TValues... args)
     : m_data{static_cast<TElementType>(arg0), static_cast<TElementType>(args)...}
+#ifdef __CUDA_ARCH__
+    // TODO: see below
+    , m_dummy(true)
+#endif
   {
   }
 
@@ -166,6 +174,10 @@ public:
 
 private:
   TElementType m_data[TSize];
+#ifdef __CUDA_ARCH__
+  // TODO: Ensure object is not zero-sized, since "zero-sized variables are not allowed in device code" ?
+  bool m_dummy;
+#endif
 };
 
 template <typename TElementType, typename TAllocator>

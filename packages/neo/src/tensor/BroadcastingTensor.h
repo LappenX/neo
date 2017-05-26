@@ -25,14 +25,14 @@ public:
 
   template <typename... TCoordArgTypes>
   __host__ __device__
-  ElementType& operator()(TCoordArgTypes&&... coords)
+  ElementType& get_element_impl(TCoordArgTypes&&... coords)
   {
     return getHelper(tmp::value_sequence::ascending_numbers_t<non_trivial_dimensions_num_v<TDimSeq>::value>(), util::forward<TCoordArgTypes>(coords)...);
   }
 
   template <typename... TCoordArgTypes>
   __host__ __device__
-  const ElementType& operator()(TCoordArgTypes&&... coords) const
+  const ElementType& get_element_impl(TCoordArgTypes&&... coords) const
   {
     return getHelper(tmp::value_sequence::ascending_numbers_t<non_trivial_dimensions_num_v<TDimSeq>::value>(), util::forward<TCoordArgTypes>(coords)...);
   }
@@ -68,15 +68,15 @@ struct TensorTraits<BroadcastingTensor<TTensorTypeIn, TDimSeq>>
 template <size_t... TBroadcastedDims, typename... TDimArgTypes, typename TOtherTensorType, ENABLE_IF(is_tensor_v<TOtherTensorType>::value)>
 __host__ __device__
 auto broadcast(TOtherTensorType&& tensor, TDimArgTypes&&... dim_args)
-RETURN_AUTO(BroadcastingTensor<non_const_param_tensor_t<TOtherTensorType&&>, DimSeq<TBroadcastedDims...>>
-  (util::forward<TOtherTensorType>(tensor), util::forward<TDimArgTypes>(dim_args)...)
+RETURN_AUTO(BroadcastingTensor<non_const_param_tensor_store_t<TOtherTensorType&&>, DimSeq<TBroadcastedDims...>>
+  (static_cast<param_tensor_forward_t<TOtherTensorType&&>>(tensor), util::forward<TDimArgTypes>(dim_args)...)
 )
 
 template <typename TBroadcastedDimSeq, typename... TDimArgTypes, typename TOtherTensorType, ENABLE_IF(is_tensor_v<TOtherTensorType>::value)>
 __host__ __device__
 auto broadcast(TOtherTensorType&& tensor, TDimArgTypes&&... dim_args)
-RETURN_AUTO(BroadcastingTensor<non_const_param_tensor_t<TOtherTensorType&&>, TBroadcastedDimSeq>
-  (util::forward<TOtherTensorType>(tensor), util::forward<TDimArgTypes>(dim_args)...)
+RETURN_AUTO(BroadcastingTensor<non_const_param_tensor_store_t<TOtherTensorType&&>, TBroadcastedDimSeq>
+  (static_cast<param_tensor_forward_t<TOtherTensorType&&>>(tensor), util::forward<TDimArgTypes>(dim_args)...)
 )
 
 } // end of ns tensor

@@ -84,7 +84,7 @@ private:
 
 
 template <typename CRTP, typename TO, typename... TInputProperties>
-class LazyMappedObservableProperty : public ObservableProperty<TO>, private Observer<>
+class LazyMappedObservableProperty : public ObservableProperty<const TO&>, private Observer<>
 {
 public:
   LazyMappedObservableProperty(TInputProperties*... input) // TODO: initialize validated?
@@ -111,7 +111,7 @@ public:
     m_validated = false;
   }
 
-  TO get() const
+  const TO& get() const
   {
     validate();
     return m_cache;

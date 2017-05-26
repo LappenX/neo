@@ -3,11 +3,14 @@
 
 #include <Common.h>
 
+#include <iostream>
+
 #include <util/Storage.h>
 #include <tmp/ValueSequence.h>
 #include <tmp/TypeSequence.h>
 #include <util/Tuple.h>
 #include <util/Assert.h>
+#include <util/Math.h>
 
 #include "TensorTypedefs.h"
 #include "TensorCoordsAndDims.h"
@@ -19,5 +22,10 @@
 #include "ReductionTensor.h"
 #include "BroadcastingTensor.h"
 #include "ElwiseOperationTensor.h"
+#include "TensorUtil.h"
+#include "VectorCrossProduct.h"
+#include "MatrixProduct.h"
+#include "TensorStreamOutput.h"
+#include "IdentityMatrix.h"
 
 #endif // TENSOR_H

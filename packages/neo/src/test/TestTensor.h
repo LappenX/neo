@@ -1,8 +1,7 @@
+#define DEFAULT_TENSOR_INDEX_STRATEGY ColMajorIndexStrategy
 #include <tensor/Tensor.h>
 
 using namespace tensor;
-
-#include <iostream> // TODO: remove
 
 
 
@@ -26,6 +25,7 @@ TEST_CASE(storage_tensor_values)
 
   AllocMatrixd<mem::alloc::heap> md2(3, 4);
   md2 = md;
+
   CHECK(md2(0, 0) == 1.0);
   CHECK(md2(2, 0) == 3.0);
   CHECK(md2(2, 2) == 9.0);
@@ -36,7 +36,7 @@ TEST_CASE(tensor_reduction_and_broadcasting)
   Vector3ui vui(1, 2, 3);
   CHECK(sum(vui) == 6);
   CHECK(prod(vui) == 6);
-
+  // TODO: take values independent of storage order of matrix in constructor
   Matrix34d md(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0);
   CHECK(sum(md) == 1.0 + 2.0 + 3.0 + 4.0 + 5.0 + 6.0 + 7.0 + 8.0 + 9.0 + 10.0 + 11.0 + 12.0);
   CHECK(prod(md) == 1.0 * 2.0 * 3.0 * 4.0 * 5.0 * 6.0 * 7.0 * 8.0 * 9.0 * 10.0 * 11.0 * 12.0);
@@ -66,6 +66,38 @@ TEST_CASE(elwise_operations)
   CHECK(all(Vector3ui(1, 2, 3) + 1 == Vector3ui(2, 3, 4)));
   CHECK(all(2 + Vector3ui(1, 2, 3) == Vector3ui(3, 4, 5)));
 }
+
+TEST_CASE(tensor_util)
+{
+  CHECK(isSymmetric(MatrixXXd<3, 3, ColMajorIndexStrategy>(1.0, 2.0, 1.0, 2.0, 5.0, 4.0, 1.0, 4.0, 3.0)));
+  CHECK(!isSymmetric(MatrixXXd<3, 3, ColMajorIndexStrategy>(1.0, 2.0, 1.0, 2.0, 5.0, 4.0, 1.0, 5.0, 3.0)));
+  CHECK(all(normalize(13 * Vector2d(0.6, 0.8)) == Vector2d(0.6, 0.8)));
+}
+
+TEST_CASE(tensor_cross)
+{
+  CHECK(all(cross(Vector3ui(1, 0, 0), Vector3ui(0, 1, 0)) == Vector3ui(0, 0, 1)));
+}
+
+TEST_CASE(matrix_product)
+{
+  Matrix23d md1(1, 4, 2, 5, 3, 6);
+  Matrix32d md2(7, 9, 11, 8, 10, 12);
+  Matrix2d md3(58, 139, 64, 154);
+  CHECK(all(md1 * md2 == md3));
+}
+
+TEST_CASE(special_tensor_constants)
+{
+  CHECK(all(identity_matrix<double, 3>::make() == MatrixXXd<3, 3>(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0)));
+  CHECK(all(identity_matrix<double, DYN>::make(3) == MatrixXXd<3, 3>(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0)));
+  CHECK(all(math::consts::one<MatrixXXd<3, 3>>::get() == MatrixXXd<3, 3>(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0)));
+  //CHECK((unit_vector::type<double>::length<4>::static_direction<2>::make() == Vector4d(0.0, 0.0, 1.0, 0.0)).all());
+  //CHECK((unit_vector::type<double>::length<DYN>::static_direction<2>::make(4) == Vector4d(0.0, 0.0, 1.0, 0.0)).all());
+  //CHECK((unit_vector::type<double>::length<4>::dynamic_direction::make(2) == Vector4d(0.0, 0.0, 1.0, 0.0)).all());
+  //CHECK((unit_vector::type<double>::length<DYN>::dynamic_direction::make(2, 4) == Vector4d(0.0, 0.0, 1.0, 0.0)).all());
+}
+
 /*
 TEST_CASE(tensor_index_strategy)
 {
@@ -86,16 +118,6 @@ TEST_CASE(tensor_index_strategy)
   CHECK(RowMajorIndexStrategy::toIndex<11, 4, 8>(Vector3s(5, 0, 0)) == RowMajorIndexStrategy::toIndex(Vector3s(11, 4, 8), Vector1s(5)));
   CHECK(RowMajorIndexStrategy::toIndex<11, 4, 8>(Vector3s(5, 0, 0)) == RowMajorIndexStrategy::toIndex(Vector3s(11, 4, 8), 5));
   CHECK(RowMajorIndexStrategy::toIndex<11, 4, 8>(Vector3s(5, 0, 0)) == RowMajorIndexStrategy::toIndex<11, 4, 8>(5));
-}
-
-TEST_CASE(special_tensor_constants)
-{
-  CHECK((identity_matrix::type<double>::rowscols<3>::make() == MatrixXXd<3, 3>(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0)).all());
-  CHECK((identity_matrix::type<double>::rowscols<DYN>::make(3) == MatrixXXd<3, 3>(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0)).all());
-  CHECK((unit_vector::type<double>::length<4>::static_direction<2>::make() == Vector4d(0.0, 0.0, 1.0, 0.0)).all());
-  CHECK((unit_vector::type<double>::length<DYN>::static_direction<2>::make(4) == Vector4d(0.0, 0.0, 1.0, 0.0)).all());
-  CHECK((unit_vector::type<double>::length<4>::dynamic_direction::make(2) == Vector4d(0.0, 0.0, 1.0, 0.0)).all());
-  CHECK((unit_vector::type<double>::length<DYN>::dynamic_direction::make(2, 4) == Vector4d(0.0, 0.0, 1.0, 0.0)).all());
 }
 
 TEST_CASE(tensor_reference)
@@ -146,12 +168,6 @@ TEST_CASE_ONLY_HOST(tensor_copying_host_device)
   CHECK_ONLY_HOST((m * 2 == h).all());
 }
 #endif
-
-TEST_CASE(tensor_util)
-{
-  CHECK(isSymmetric(MatrixXXd<3, 3, ColMajorIndexStrategy>(1.0, 2.0, 1.0, 2.0, 5.0, 4.0, 1.0, 4.0, 3.0)));
-  CHECK(!isSymmetric(MatrixXXd<3, 3, ColMajorIndexStrategy>(1.0, 2.0, 1.0, 2.0, 5.0, 4.0, 1.0, 5.0, 3.0)));
-}
 
 TEST_CASE(matrix_mul)
 {

@@ -2,6 +2,33 @@
 
 namespace tensor {
 
+
+namespace detail {
+
+template <size_t... TDims>
+struct StaticDimAccessHelper;
+
+template <size_t TFirst, size_t... TRest>
+struct StaticDimAccessHelper<TFirst, TRest...>
+{
+  static size_t get(size_t index)
+  {
+    return index == 0 ? TFirst : StaticDimAccessHelper<TRest...>::get(index - 1);
+  }
+};
+
+template <>
+struct StaticDimAccessHelper<>
+{
+  static size_t get(size_t index)
+  {
+    ASSERT(false, "Index out of bounds");
+    return 0;
+  }
+};
+
+} // end of ns detail
+
 template <typename TThisType, typename TElementType, size_t... TDims>
 class StaticTensor : public Tensor<TThisType, TElementType, TDims...>
 {
@@ -31,41 +58,25 @@ public:
 
   template <size_t TIndex>
   __host__ __device__
-  constexpr size_t dim() const
+  constexpr size_t dim_impl() const
   {
     return nth_dimension_v<TIndex, DimSeq<TDims...>>::value;
   }
 
   __host__ __device__
-  size_t dim(size_t index) const
+  size_t dim_impl(size_t index) const
   {
-    return math::lt(index, non_trivial_dimensions_num_v<tensor_dimseq_t<TThisType>>::value) ? dims()(index) : 1;
+    return math::lt(index, non_trivial_dimensions_num_v<tensor_dimseq_t<TThisType>>::value) ?
+          detail::StaticDimAccessHelper<TDims...>::get(index)
+        : 1;
   }
 
-  template <size_t TLength = non_trivial_dimensions_num_v<DimSeq<TDims...>>::value>
-  __host__ __device__
-  VectorXs<TLength> dims() const
-  { // TODO: static values vector
-    static_assert(TLength >= non_trivial_dimensions_num_v<tensor_dimseq_t<TThisType>>::value, "Non-trivial dimensions are cut off");
-    return vectorSizeHelper1<TLength>(tmp::value_sequence::ascending_numbers_t<TLength>());
-  }
-
-private:
-  template <size_t TLength, size_t... TIndices>
-  __host__ __device__
-  VectorXs<TLength> vectorSizeHelper1(tmp::value_sequence::Sequence<size_t, TIndices...>) const
-  {
-    return vectorSizeHelper2<TLength, (nth_dimension_v<TIndices, DimSeq<TDims...>>::value)...>();
-  }
-
-  template <size_t TLength, size_t... TReturnDims>
-  __host__ __device__
-  VectorXs<TLength> vectorSizeHelper2() const
-  {
-    static_assert(TLength == sizeof...(TReturnDims), "Invalid length");
-    return VectorXs<TLength>(TReturnDims...);
-  }
+  TENSOR_DIMS_IMPL_FROM_IND(dims_impl)
 };
+
+
+
+
 
 template <typename TStorageType, typename TElementType, typename TIndexStrategy, size_t... TDims>
 class DenseStaticStorageTensor : public StaticTensor<DenseStaticStorageTensor<TStorageType, TElementType, TIndexStrategy, TDims...>, TElementType, TDims...>
@@ -101,20 +112,6 @@ public:
     *this = other;
   }
 
-  template <typename... TCoordArgTypes>
-  __host__ __device__
-  TElementType& operator()(TCoordArgTypes&&... coords)
-  {
-    return m_storage[TIndexStrategy::template toIndex<TDims...>(util::forward<TCoordArgTypes>(coords)...)];
-  }
-
-  template <typename... TCoordArgTypes>
-  __host__ __device__
-  const TElementType& operator()(TCoordArgTypes&&... coords) const
-  {
-    return m_storage[TIndexStrategy::template toIndex<TDims...>(util::forward<TCoordArgTypes>(coords)...)];
-  }
-
   __host__ __device__
   TStorageType& storage()
   {
@@ -128,6 +125,20 @@ public:
   }
   
   TENSOR_ASSIGN
+
+  template <typename... TCoordArgTypes>
+  __host__ __device__
+  TElementType& get_element_impl(TCoordArgTypes&&... coords)
+  {
+    return m_storage[TIndexStrategy::template toIndex<TDims...>(util::forward<TCoordArgTypes>(coords)...)];
+  }
+
+  template <typename... TCoordArgTypes>
+  __host__ __device__
+  const TElementType& get_element_impl(TCoordArgTypes&&... coords) const
+  {
+    return m_storage[TIndexStrategy::template toIndex<TDims...>(util::forward<TCoordArgTypes>(coords)...)];
+  }
 
 private:
   TStorageType m_storage;

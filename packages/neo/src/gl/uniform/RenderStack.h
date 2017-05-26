@@ -13,7 +13,7 @@
 namespace gl {
 
 template <typename T, size_t TSize, typename CRTP>
-class RenderStack : public BinRenderStep, public Property<T>
+class RenderStack : public BinRenderStep, public Property<const T&>
 {
 public:
   RenderStack(T empty_value)
@@ -58,7 +58,7 @@ public:
     return m_stack.isEmpty();
   }
 
-  T get() const
+  const T& get() const
   {
     return peek();
   }
@@ -81,7 +81,7 @@ class MultiplicationRenderStack : public RenderStack<T, TSize, MultiplicationRen
 {
 public:
   MultiplicationRenderStack()
-    : RenderStack<T, TSize, MultiplicationRenderStack<T, TSize>>(math::Consts<T>::one)
+    : RenderStack<T, TSize, MultiplicationRenderStack<T, TSize>>(math::consts::one<T>::get())
   {
   }
 

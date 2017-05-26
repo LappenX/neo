@@ -25,7 +25,7 @@ struct ElwiseOperationElementTypeHelper
   RETURN_AUTO(get1(tmp::value_sequence::ascending_numbers_t<sizeof...(TTensorTypesIn)>(), util::forward<TCoordArgTypes>(coords)...))
 };
 
-} // detail
+} // end of ns detail
 
 template <typename TOperation, typename... TTensorTypesIn>
 using ElwiseOperationElementType = decltype(detail::ElwiseOperationElementTypeHelper<TOperation, TTensorTypesIn...>::get2(std::declval<VectorXs<sizeof...(TTensorTypesIn)>>()));
@@ -58,27 +58,27 @@ public:
 
   template <typename... TCoordArgTypes>
   __host__ __device__
-  ElementType operator()(TCoordArgTypes&&... coords) const
+  ElementType get_element_impl(TCoordArgTypes&&... coords) const
   {
     return this->get(tmp::value_sequence::ascending_numbers_t<sizeof...(TTensorTypesIn)>(), util::forward<TCoordArgTypes>(coords)...);
   }
 
   template <size_t TLength = non_trivial_dimensions_num_v<DimSeq>::value>
   __host__ __device__
-  VectorXs<TLength> dims() const
+  VectorXs<TLength> dyn_dims_impl() const
   {
     return m_tensors.template get<0>().template dims<TLength>();
   }
 
   template <size_t TIndex>
   __host__ __device__
-  size_t dim() const
+  size_t dyn_dim_impl() const
   {
     return m_tensors.template get<0>().template dim<TIndex>();
   }
 
   __host__ __device__
-  size_t dim(size_t index) const
+  size_t dyn_dim_impl(size_t index) const
   {
     return m_tensors.template get<0>().dim(index);
   }
@@ -89,7 +89,7 @@ private:
   template <typename... TCoordArgTypes, size_t... TSequence>
   __host__ __device__
   ElementType get(tmp::value_sequence::Sequence<size_t, TSequence...>, TCoordArgTypes&&... coords) const
-  { // TODO: indices are calculated separately for each tensor; might only have to be calculated once if tensor sizes are equal
+  { // TODO: indices are calculated separately for each tensor; might only have to be calculated once if tensor sizes and indexing strategies are equal
     return TOperation()(
       (
         (m_tensors.template get<TSequence>())
@@ -108,10 +108,10 @@ struct TensorTraits<ElwiseOperationTensor<TOperation, TTensorTypesIn...>>
 
 template <typename TOperation, typename... TTensorTypesIn>
 __host__ __device__
-ElwiseOperationTensor<TOperation, const_param_tensor_t<TTensorTypesIn&&>...> elwise(TTensorTypesIn&&... tensors)
+ElwiseOperationTensor<TOperation, const_param_tensor_store_t<TTensorTypesIn&&>...> elwise(TTensorTypesIn&&... tensors)
 {
   static_assert(sizeof...(TTensorTypesIn) > 0, "Invalid number of input tensors");
-  return ElwiseOperationTensor<TOperation, const_param_tensor_t<TTensorTypesIn&&>...>(util::forward<TTensorTypesIn>(tensors)...);
+  return ElwiseOperationTensor<TOperation, const_param_tensor_store_t<TTensorTypesIn&&>...>(static_cast<param_tensor_forward_t<TTensorTypesIn&&>>(tensors)...);
 }
 
 #define ELWISE_OP_T(NAME, OPERATION) \

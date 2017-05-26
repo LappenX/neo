@@ -5,7 +5,7 @@
 #include <util/Tuple.h>
 #include <tmp/ValueSequence.h>
 
-
+#include <iostream> // TODO: remove
 
 template <typename T>
 class Property
@@ -94,7 +94,7 @@ private:
   template <size_t... TIndices>
   TO callForward(tmp::value_sequence::IndexSequence<TIndices...>) const
   {
-    return static_cast<const CRTP*>(this)->forward((m_input.template get<TIndices>()->get())...);
+    return static_cast<const CRTP*>(this)->forward(m_input.template get<TIndices>()->get()...);
   }
 };
 

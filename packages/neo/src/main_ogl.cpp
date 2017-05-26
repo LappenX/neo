@@ -2,10 +2,12 @@
 #include <stdlib.h>
 #include <math.h>
 
+#include <gl/gl.h>
+
 #include <resource/Resources.h>
 #include <resource/TextResource.h>
 
-#include <gl/gl.h>
+
 
 int main (int argc, char* argv[])
 {
@@ -22,7 +24,7 @@ int main (int argc, char* argv[])
 
 
   gl::Viewport viewport(0, 0, 500, 400);
-  gl::ClearColorBuffer clear_buffer(glm::vec4(0, 0, 1, 1));
+  gl::ClearColorBuffer clear_buffer(tensor::Vector4f(0, 0, 1, 1));
 
   gl::AttributeMapping attribute_mapping;
   attribute_mapping.registerInput("in_location");
@@ -33,12 +35,12 @@ int main (int argc, char* argv[])
   gl::Shader rectangle_shader(attribute_mapping, &rectangle_vert_stage, &rectangle_frag_stage);
 
   gl::BufferObject rectangle_data(GL_STATIC_DRAW);
-  glm::vec3 data[4];
+  tensor::Vector3f data[4];
   float size = 0.5f;
-  data[0] = glm::vec3(-size, size, 0);
-  data[1] = glm::vec3(-size, -size, 0);
-  data[2] = glm::vec3(size, size, 0);
-  data[3] = glm::vec3(size, -size, 0);
+  data[0] = tensor::Vector3f(-size, size, 0);
+  data[1] = tensor::Vector3f(-size, -size, 0);
+  data[2] = tensor::Vector3f(size, size, 0);
+  data[3] = tensor::Vector3f(size, -size, 0);
   rectangle_data.write(GL_ARRAY_BUFFER, reinterpret_cast<uint8_t*>(data), 4 * 3 * sizeof(float));
 
   gl::VertexArrayObject rectangle_vao(attribute_mapping, GL_TRIANGLE_STRIP);
@@ -48,17 +50,20 @@ int main (int argc, char* argv[])
 
 
 
-  gl::MultiplicationRenderStack<glm::mat4, 64>
+
+  gl::MultiplicationRenderStack<tensor::Matrix4f, 64>
     model_matrix;
 
-  SimpleObservableProperty<glm::vec3> camera_pos(glm::vec3(0, 0, -1));
-  SimpleObservableProperty<glm::vec3> camera_view_target(glm::vec3(0, 0, 0));
-  SimpleObservableProperty<glm::vec3> camera_up(glm::vec3(0, 1, 0));
-  gl::LookAtCamera<SimpleObservableProperty<glm::vec3>, SimpleObservableProperty<glm::vec3>, SimpleObservableProperty<glm::vec3>>
+  SimpleObservableProperty<tensor::Vector3f> camera_pos(tensor::Vector3f(0, 0, -1));
+  SimpleObservableProperty<tensor::Vector3f> camera_view_target(tensor::Vector3f(0, 0, 0));
+  SimpleObservableProperty<tensor::Vector3f> camera_up(tensor::Vector3f(0, 1, 0));
+  gl::LookAtCamera<SimpleObservableProperty<tensor::Vector3f>, SimpleObservableProperty<tensor::Vector3f>, SimpleObservableProperty<tensor::Vector3f>>
     view_matrix(&camera_pos, &camera_view_target, &camera_up);
   
   StaticFunctionMappedProperty<math::functor::multiply, decltype(view_matrix), decltype(model_matrix)>
     mv_matrix(&view_matrix, &model_matrix);
+
+  std::cout << view_matrix.get() * model_matrix.get() << "\n" << mv_matrix.get() << "\n-------------------\n";
 
   SimpleObservableProperty<float> fov(45.0f / 180.0f * 3.14159265f);
   SimpleObservableProperty<float> aspect_ratio(((float) window.getWidth()) / window.getHeight());
@@ -71,7 +76,7 @@ int main (int argc, char* argv[])
   StaticFunctionMappedProperty<math::functor::multiply, decltype(projection_matrix), decltype(mv_matrix)>
     mvp_matrix(&projection_matrix, &mv_matrix);
 
-  gl::Uniform<glm::mat4> rectangle_mvp_uniform(&rectangle_shader, "uModelViewProjectionMatrix");
+  gl::Uniform<tensor::Matrix4f> rectangle_mvp_uniform(&rectangle_shader, "uModelViewProjectionMatrix");
 
   auto mvp_setter = rectangle_mvp_uniform.makeSetStep(&mvp_matrix);
 

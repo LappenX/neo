@@ -37,57 +37,86 @@ struct TensorElementTypeHelper
 
 
 
-struct ConstParamTensorHelper
+struct ConstParamTensorStoreHelper
 {
   template <typename TTensorType, typename TElementType, size_t... TDims>
-  static const TTensorType& deduce(Tensor<TTensorType, TElementType, TDims...>&)
+  static const TTensorType& deduce(Tensor<TTensorType, TElementType, TDims...>& tensor)
   {
     return std::declval<const TTensorType&>();
   }
 
   template <typename TTensorType, typename TElementType, size_t... TDims>
-  static TTensorType deduce(Tensor<TTensorType, TElementType, TDims...>&&)
+  static TTensorType deduce(Tensor<TTensorType, TElementType, TDims...>&& tensor)
   {
     return std::declval<TTensorType>();
   }
 
   template <typename TTensorType, typename TElementType, size_t... TDims>
-  static const TTensorType& deduce(const Tensor<TTensorType, TElementType, TDims...>&)
+  static const TTensorType& deduce(const Tensor<TTensorType, TElementType, TDims...>& tensor)
   {
     return std::declval<const TTensorType&>();
   }
 
   template <typename TTensorType, typename TElementType, size_t... TDims>
-  static TTensorType deduce(const Tensor<TTensorType, TElementType, TDims...>&&)
+  static TTensorType deduce(const Tensor<TTensorType, TElementType, TDims...>&& tensor)
   {
     return std::declval<TTensorType>();
   }
 };
 
-struct NonConstParamTensorHelper
+struct NonConstParamTensorStoreHelper
 {
   template <typename TTensorType, typename TElementType, size_t... TDims>
-  static TTensorType& deduce(Tensor<TTensorType, TElementType, TDims...>&)
+  static TTensorType& deduce(Tensor<TTensorType, TElementType, TDims...>& tensor)
   {
     return std::declval<TTensorType&>();
   }
 
   template <typename TTensorType, typename TElementType, size_t... TDims>
-  static TTensorType deduce(Tensor<TTensorType, TElementType, TDims...>&&)
+  static TTensorType deduce(Tensor<TTensorType, TElementType, TDims...>&& tensor)
   {
     return std::declval<TTensorType>();
   }
 
   template <typename TTensorType, typename TElementType, size_t... TDims>
-  static const TTensorType& deduce(const Tensor<TTensorType, TElementType, TDims...>&)
+  static const TTensorType& deduce(const Tensor<TTensorType, TElementType, TDims...>& tensor)
   {
     return std::declval<const TTensorType&>();
   }
 
   template <typename TTensorType, typename TElementType, size_t... TDims>
-  static TTensorType deduce(const Tensor<TTensorType, TElementType, TDims...>&&)
+  static TTensorType deduce(const Tensor<TTensorType, TElementType, TDims...>&& tensor)
   {
     return std::declval<TTensorType>();
+  }
+};
+
+
+
+struct ParamTensorForwardHelper
+{
+  template <typename TTensorType, typename TElementType, size_t... TDims>
+  static TTensorType& deduce(Tensor<TTensorType, TElementType, TDims...>& tensor)
+  {
+    return std::declval<TTensorType&>();
+  }
+
+  template <typename TTensorType, typename TElementType, size_t... TDims>
+  static TTensorType&& deduce(Tensor<TTensorType, TElementType, TDims...>&& tensor)
+  {
+    return std::declval<TTensorType&&>();
+  }
+
+  template <typename TTensorType, typename TElementType, size_t... TDims>
+  static const TTensorType& deduce(const Tensor<TTensorType, TElementType, TDims...>& tensor)
+  {
+    return std::declval<const TTensorType&>();
+  }
+
+  template <typename TTensorType, typename TElementType, size_t... TDims>
+  static const TTensorType&& deduce(const Tensor<TTensorType, TElementType, TDims...>&& tensor)
+  {
+    return std::declval<const TTensorType&&>();
   }
 };
 

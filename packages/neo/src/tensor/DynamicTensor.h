@@ -25,22 +25,22 @@ public:
 
   template <size_t TIndex>
   __host__ __device__
-  size_t dim() const
+  size_t dim_impl() const
   {
-    return static_cast<const TThisType*>(this)->template dyn_dim<TIndex>();
+    return static_cast<const TThisType*>(this)->template dyn_dim_impl<TIndex>();
   }
 
   __host__ __device__
-  size_t dim(size_t index) const
+  size_t dim_impl(size_t index) const
   {
-    return static_cast<const TThisType*>(this)->dyn_dim(index);
+    return static_cast<const TThisType*>(this)->dyn_dim_impl(index);
   }
 
   template <size_t TLength = non_trivial_dimensions_num_v<DimSeq<TDims...>>::value>
   __host__ __device__
-  VectorXs<TLength> dims() const
+  VectorXs<TLength> dims_impl() const
   {
-    return static_cast<const TThisType*>(this)->template dyn_dims<TLength>();
+    return static_cast<const TThisType*>(this)->template dyn_dims_impl<TLength>();
   }
 };
 
@@ -48,7 +48,7 @@ template <typename TThisType, typename TElementType, size_t... TDims>
 class DynamicTensorStoreDimensions : public DynamicTensor<TThisType, TElementType, TDims...>
 {
 public:
-  static const size_t NON_TRIVIAL_DIMENSIONS_NUM = non_trivial_dimensions_num_v<DimSeq<TDims...>>::value;
+  using DimSeq = tensor::DimSeq<TDims...>;
   using SuperType = DynamicTensor<TThisType, TElementType, TDims...>;
 
   template <typename... TDimensionArgs>
@@ -61,34 +61,21 @@ public:
 
   template <size_t TIndex>
   __host__ __device__
-  size_t dyn_dim() const
+  size_t dyn_dim_impl() const
   {
     return getNthDimension<TIndex>(m_dims);
   }
 
   __host__ __device__
-  size_t dyn_dim(size_t index) const
+  size_t dyn_dim_impl(size_t index) const
   {
-    return math::lt(index, non_trivial_dimensions_num_v<DimSeq<TDims...>>::value) ? m_dims(index) : 1;
+    return math::lt(index, non_trivial_dimensions_num_v<DimSeq>::value) ? m_dims(index) : 1;
   }
 
-  template <size_t TLength = non_trivial_dimensions_num_v<DimSeq<TDims...>>::value>
-  __host__ __device__
-  VectorXs<TLength> dyn_dims() const
-  { // TODO: no new vector when length equals saved length
-    ASSERT(math::gte(TLength, getNonTrivialDimensionsNum(m_dims)), "Non-trivial dimensions are cut off");
-    return vectorSizeHelper<TLength>(tmp::value_sequence::ascending_numbers_t<TLength>());
-  }
+  TENSOR_DIMS_IMPL_FROM_IND(dyn_dims_impl)
 
 private:
-  VectorXs<NON_TRIVIAL_DIMENSIONS_NUM> m_dims;
-
-  template <size_t TLength, size_t... TIndices>
-  __host__ __device__
-  VectorXs<TLength> vectorSizeHelper(tmp::value_sequence::Sequence<size_t, TIndices...>) const
-  {
-    return VectorXs<TLength>(this->template dim<TIndices>()...);
-  }
+  VectorXs<non_trivial_dimensions_num_v<DimSeq>::value> m_dims;
 };
 
 
@@ -123,20 +110,6 @@ public:
   {
     static_assert(TVectorLength2 != DYN, "Cannot have dynamic length dimension vector");
   }
-  
-  template <typename... TCoordArgTypes>
-  __host__ __device__
-  TElementType& operator()(TCoordArgTypes&&... coords)
-  {
-    return m_storage[TIndexStrategy::template toIndex(this->template dims<ThisType::NON_TRIVIAL_DIMENSIONS_NUM>(), util::forward<TCoordArgTypes>(coords)...)];
-  }
-
-  template <typename... TCoordArgTypes>
-  __host__ __device__
-  const TElementType& operator()(TCoordArgTypes&&... coords) const
-  {
-    return m_storage[TIndexStrategy::template toIndex(this->template dims<ThisType::NON_TRIVIAL_DIMENSIONS_NUM>(), util::forward<TCoordArgTypes>(coords)...)];
-  }
 
   __host__ __device__
   TStorageType& storage()
@@ -151,6 +124,20 @@ public:
   }
 
   TENSOR_ASSIGN
+
+  template <typename... TCoordArgTypes>
+  __host__ __device__
+  TElementType& get_element_impl(TCoordArgTypes&&... coords)
+  {
+    return m_storage[TIndexStrategy::template toIndex(this->template dims<ThisType::NON_TRIVIAL_DIMENSIONS_NUM>(), util::forward<TCoordArgTypes>(coords)...)];
+  }
+
+  template <typename... TCoordArgTypes>
+  __host__ __device__
+  const TElementType& get_element_impl(TCoordArgTypes&&... coords) const
+  {
+    return m_storage[TIndexStrategy::template toIndex(this->template dims<ThisType::NON_TRIVIAL_DIMENSIONS_NUM>(), util::forward<TCoordArgTypes>(coords)...)];
+  }
 
 private:
   TStorageType m_storage;
