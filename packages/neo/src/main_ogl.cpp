@@ -34,18 +34,30 @@ int main (int argc, char* argv[])
   gl::ShaderStage rectangle_frag_stage(manager.get<res::TextFile>(boost::filesystem::current_path() / "res", "rectangle.frag")->getContent(), GL_FRAGMENT_SHADER);
   gl::Shader rectangle_shader(attribute_mapping, &rectangle_vert_stage, &rectangle_frag_stage);
 
+
+
+
+
   gl::BufferObject rectangle_data(GL_STATIC_DRAW);
-  tensor::Vector3f data[4];
+  boost::array<tensor::Vector3f, 4> data;
   float size = 0.5f;
   data[0] = tensor::Vector3f(-size, size, 0);
   data[1] = tensor::Vector3f(-size, -size, 0);
   data[2] = tensor::Vector3f(size, size, 0);
   data[3] = tensor::Vector3f(size, -size, 0);
-  rectangle_data.write(GL_ARRAY_BUFFER, reinterpret_cast<uint8_t*>(data), 4 * 3 * sizeof(float));
+  rectangle_data.write(GL_ARRAY_BUFFER, data);
+
+  gl::BufferObject rectangle_ibo_data(GL_STATIC_DRAW);
+  gl::IndexBufferObject rectangle_ibo(&rectangle_ibo_data);
+  boost::array<uint32_t, 4> indices;
+  indices[0] = 0;
+  indices[1] = 1;
+  indices[2] = 2;
+  indices[3] = 3;
+  rectangle_ibo.write(indices);
 
   gl::VertexArrayObject rectangle_vao(attribute_mapping, GL_TRIANGLE_STRIP);
   rectangle_vao.addAttribute(gl::VertexAttribute("in_location", &rectangle_data, 3 * sizeof(float), 0, GL_FLOAT, 3));
-  rectangle_vao.setDrawnVertexNum(4);
 
 
 
@@ -62,8 +74,6 @@ int main (int argc, char* argv[])
   
   StaticFunctionMappedProperty<math::functor::multiply, decltype(view_matrix), decltype(model_matrix)>
     mv_matrix(&view_matrix, &model_matrix);
-
-  std::cout << view_matrix.get() * model_matrix.get() << "\n" << mv_matrix.get() << "\n-------------------\n";
 
   SimpleObservableProperty<float> fov(45.0f / 180.0f * 3.14159265f);
   SimpleObservableProperty<float> aspect_ratio(((float) window.getWidth()) / window.getHeight());
@@ -102,7 +112,7 @@ int main (int argc, char* argv[])
     rectangle_shader.pre(context);
     mvp_setter.render(context);
     window.render(context);
-    rectangle_vao.render(context);
+    rectangle_vao.render(1, 3, &rectangle_ibo);
     rectangle_shader.post(context);
 
     window.poll();

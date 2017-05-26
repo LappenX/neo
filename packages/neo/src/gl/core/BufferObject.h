@@ -6,6 +6,7 @@
 #include "../GlError.h"
 #include <util/Logging.h>
 
+#include <boost/array.hpp>
 #include <GL/glew.h>
 #include <GL/gl.h>
 
@@ -15,7 +16,7 @@ class BufferObject
 {
 public:
   /*!
-   * \brief 
+   * \brief
    * \param usage Specifies the expected usage pattern of the data store. The symbolic constant must be GL_STREAM_DRAW, GL_STREAM_READ, GL_STREAM_COPY, GL_STATIC_DRAW, GL_STATIC_READ, GL_STATIC_COPY, GL_DYNAMIC_DRAW, GL_DYNAMIC_READ, or GL_DYNAMIC_COPY
    */
   BufferObject(GLenum usage)
@@ -57,11 +58,17 @@ public:
 
   void write(GLenum target, uint8_t* data, uint32_t length)
   {
-    // TODO: GL_VERSION_4_5 glBufferDataNamed(m_handle, length, data, m_usage);
+    // TODO: GL_VERSION_4_5 glNamedBufferData(m_handle, length, data, m_usage);
     bind(target);
     glBufferData(target, length, data, m_usage);
     unbind(target);
     GL_CHECK_ERROR("Failed to write data from host memory to device buffer object");
+  }
+
+  template <typename T, size_t TNum>
+  void write(GLenum target, boost::array<T, TNum> data)
+  {
+    write(target, reinterpret_cast<uint8_t*>(&data[0]), TNum * sizeof(T));
   }
 
 private:

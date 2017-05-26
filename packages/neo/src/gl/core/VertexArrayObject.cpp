@@ -47,23 +47,22 @@ void VertexArrayObject::addAttribute(VertexAttribute attrib)
   LOG(debug, "gl") << "Added attribute to vertex array object";
 }
 
-void VertexArrayObject::render(RenderContext& context)
+void VertexArrayObject::render(size_t first, size_t num)
 {
-  if (!context.active_shader)
-  {
-    throw GlException("No active shader when rendering VAO");
-  }
-
-  // Identity: glm::mat4(1.0f);
-  /* TODO: Matrix4f mv = modelMatrices.isEmpty() ? (Matrix4f) new Matrix4f().setIdentity() : modelMatrices.peek();
-  vao.getShader().set(Shader.MVP_MATRIX_GLSL_NAME, Matrix4f.mul(projections.peek().getProjectionMatrix(), mv, null));
-  vao.getShader().set(Shader.MV_MATRIX_GLSL_NAME, mv);
-  vao.getShader().set(Shader.PROJECTION_MATRIX_GLSL_NAME, projections.peek().getProjectionMatrix());*/
-
   bind();
-  glDrawArrays(this->m_render_type, 0, this->m_vertex_num); // TODO: move vertex_num to RenderVAO ?
+  glDrawArrays(this->m_render_type, first, num);
   GL_CHECK_ERROR("Failed to draw vertex array object");
   unbind();
+}
+
+void VertexArrayObject::render(size_t first, size_t num, IndexBufferObject* ibo)
+{
+  this->bind();
+  ibo->bind();
+  glDrawElements(this->m_render_type, num, ibo->m_index_type, reinterpret_cast<void*>(ibo->m_index_size * first));
+  GL_CHECK_ERROR("Failed to draw vertex array object");
+  ibo->unbind();
+  this->unbind();
 }
 
 } // end of ns gl

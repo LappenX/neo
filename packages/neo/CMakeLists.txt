@@ -36,7 +36,7 @@ ADD_DEPENDENCIES(tensor_cuda_test tensor_non_cuda_test)
 
 
 
-# TODO: ensure in NEO_ADD_SOURCE etc that all given files exist
+
 NEO_BEGIN_TARGET(main_ogl EXE)
   NEO_ADD_INCLUDE_DIRECTORIES(src)
   NEO_ADD_SOURCES(src/main_ogl.cpp src/util/Logging.cpp src/gl/core/VertexArrayObject.cpp src/resource/TextResource.cpp src/gl/core/Shader.cpp

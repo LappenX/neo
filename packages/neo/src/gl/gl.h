@@ -31,5 +31,6 @@
 #include "GlLibrary.h"
 #include "RenderContext.h"
 #include "RenderStep.h"
+#include "GlConsts.h"
 
 #endif // VIEW_GL_H
