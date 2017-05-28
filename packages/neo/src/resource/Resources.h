@@ -112,6 +112,11 @@ public:
     : Exception("Failed to load " + rid.toResourceString())
   {
   }
+
+  ResourceLoadException(const Identifier& rid, std::string message)
+    : Exception("Failed to load " + rid.toResourceString() + ": " + message)
+  {
+  }
 };
 
 class Manager

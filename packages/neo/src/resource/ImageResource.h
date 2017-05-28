@@ -3,51 +3,22 @@
 
 #include <Common.h>
 
-#include <FreeImagePlus.h>
-
+#include <util/Logging.h>
 #include "FileResource.h"
+#include <tensor/Tensor.h>
+
+#include <FreeImage.h>
+
+
 
 namespace res {
 
-class FreeImageLibrary : public Initializable
-{
-public:
-  static FreeImageLibrary INSTANCE; // TODO: make thread-safe, ResourceManager can use multiple threads?
+namespace freeimage {
 
-  void init()
-  {
-    FreeImage_Initialise(true);
-    m_initialized = true;
-  }
+void init();
+void deinit();
 
-  void deinit()
-  {
-    FreeImage_DeInitialise();
-    m_initialized = false;
-  }
-
-  bool isInitialized() const
-  {
-    return m_initialized;
-  }
-
-private:
-  FreeImageLibrary()
-    : m_initialized(false)
-  {
-  }
-
-  FreeImageLibrary(const FreeImageLibrary& other)
-    : m_initialized(other.m_initialized)
-  {
-  }
-
-  bool m_initialized;
-};
-
-
-
-
+} // end of ns freeimage
 
 class ImageFile;
 
@@ -95,22 +66,20 @@ class ImageFile : public RIDResource<ImageFileRID>
 public:
   using rid_t = ImageFileRID;
 
-  using ResourceType = const uint8_t*; // TODO: make image class
+  using ImageType = tensor::StridedStorageTensor<mem::AllocatedStorage<uint8_t, mem::alloc::heap>,
+    uint8_t, tensor::DYN, tensor::DYN, tensor::DYN>;
 
   ImageFile(const ImageFileRID& rid);
   virtual ~ImageFile();
 
-  const ResourceType& getImageData() const // TODO: make image class
-  { // TODO: fix weird type
-    return m_data;
+  const ImageType& getImage() const
+  {
+    return m_image;
   }
 
 private:
   FIBITMAP* m_handle;
-  uint32_t m_bits_per_pixel;
-  uint32_t m_width;
-  uint32_t m_height;
-  const uint8_t* m_data;
+  ImageType m_image;
 
   NO_COPYING(ImageFile)
 };

@@ -65,6 +65,10 @@ template <typename TTensorType, typename... TCoordArgTypes>
 __host__ __device__
 bool coordsAreInRange(TTensorType&& tensor, TCoordArgTypes&&... coords);
 
+template <typename... TDimensionArgs>
+__host__ __device__
+size_t dimensionProduct(TDimensionArgs&&... dim_args);
+
 
 
 

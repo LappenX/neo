@@ -196,16 +196,16 @@ __host__ __device__
 bool areSameDimensions2(const Vector<TVectorType1, TElementType1, TVectorLength1>& dims1,
                          const Vector<TVectorType2, TElementType2, TVectorLength2>& dims2)
 {
-  for (size_t i = 0; i < math::min(dims1.rows(), dims2.rows()); i++)
+  for (size_t i = 0; i < math::min(dims1.template dim<0>(), dims2.template dim<0>()); i++)
   {
     if (dims1(i) != dims2(i))
     {
       return false;
     }
   }
-  if (dims1.rows() > dims2.rows())
+  if (dims1.template dim<0>() > dims2.template dim<0>())
   {
-    for (size_t i = dims2.rows(); i < dims1.rows(); i++)
+    for (size_t i = dims2.template dim<0>(); i < dims1.template dim<0>(); i++)
     {
       if (dims1(i) != 1)
       {
@@ -215,7 +215,7 @@ bool areSameDimensions2(const Vector<TVectorType1, TElementType1, TVectorLength1
   }
   else
   {
-    for (size_t i = dims1.rows(); i < dims2.rows(); i++)
+    for (size_t i = dims1.template dim<0>(); i < dims2.template dim<0>(); i++)
     {
       if (dims2(i) != 1)
       {
@@ -480,4 +480,44 @@ bool coordsAreInRange(TTensorType&& tensor, TCoordArgTypes&&... coords)
 {
   return detail::CoordsAreInRangeHelper<getCoordinateNum<TCoordArgTypes...>()>::get
             (util::forward<TTensorType>(tensor), util::forward<TCoordArgTypes>(coords)...);
+}
+
+
+
+
+
+namespace detail {
+
+struct ProductHelper
+{
+  template <typename... TDimensionArgs, ENABLE_IF_ARE_SIZE_T(TDimensionArgs...)>
+  __host__ __device__
+  static size_t product(TDimensionArgs&&... dim_args)
+  {
+    return math::multiply(dim_args...);
+  }
+
+  template <typename TVectorType2, typename TElementType2, size_t TVectorLength2>
+  __host__ __device__
+  static size_t product(const Vector<TVectorType2, TElementType2, TVectorLength2>& dim_vec)
+  {
+    static_assert(TVectorLength2 != DYN, "Cannot have dynamic length dimension vector");
+    return vectorProduct(dim_vec, tmp::value_sequence::ascending_numbers_t<TVectorLength2>());
+  }
+
+  template <typename TVectorType2, typename TElementType2, size_t TVectorLength2, size_t... TIndices>
+  __host__ __device__
+  static size_t vectorProduct(const Vector<TVectorType2, TElementType2, TVectorLength2>& dim_vec, tmp::value_sequence::Sequence<size_t, TIndices...>)
+  {
+    return math::multiply(dim_vec(TIndices)...);
+  }
+};
+
+} // end of ns detail
+
+template <typename... TDimensionArgs>
+__host__ __device__
+size_t dimensionProduct(TDimensionArgs&&... dim_args)
+{
+  return detail::ProductHelper::product(util::forward<TDimensionArgs>(dim_args)...);
 }

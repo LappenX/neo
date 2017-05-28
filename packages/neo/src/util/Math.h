@@ -15,6 +15,27 @@ struct one;
 
 } // end of ns consts
 
+
+template <typename TTo, typename TFrom>
+__host__ __device__
+constexpr auto cast_to(TFrom x)
+RETURN_AUTO(static_cast<TTo>(x))
+
+namespace functor {
+template <typename TTo>
+struct cast_to
+{
+  template <typename TFrom>
+  __host__ __device__
+  constexpr auto operator()(TFrom x) const
+  RETURN_AUTO(math::cast_to<TTo>(x))
+};
+}
+
+
+
+
+
 #define TYPE_POSTFIX &&
 
 
@@ -116,6 +137,8 @@ OPERATION_TT(subtract, X1 - X2)
 OPERATION_V2(multiply, 1, x, X1 * multiply(X2, REST...))
 OPERATION_TT(divide, X1 / X2)
 OPERATION_T(negate, -x)
+OPERATION_TT(mod, X1 % X2)
+OPERATION_TT(fmod, (typename std::common_type<T1, T2>::type) ::fmod(X1, X2))
 
 OPERATION_T(id, x)
 OPERATION_T(abs, x >= 0 ? x : -x)
@@ -147,6 +170,11 @@ OPERATION_TT(cross_entropy_derivative, (X1 - X2) / (X1 * (1 - X1)))
 #undef X1
 #undef X2
 #undef REST
+
+#undef OPERATION_T
+#undef OPERATION_TT
+#undef OPERATION_V1
+#undef OPERATION_V2
 
 } // end of ns math
 

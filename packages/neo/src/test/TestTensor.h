@@ -31,6 +31,22 @@ TEST_CASE(storage_tensor_values)
   CHECK(md2(2, 2) == 9.0);
 }
 
+TEST_CASE(strided_tensor)
+{
+  Matrix34ui m(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12);
+
+  mem::AllocatedStorage<uint32_t, mem::alloc::heap> storage(12);
+  for (size_t i = 0; i < 12; i++)
+  {
+    storage[i] = i + 1;
+  }
+
+  StridedStorageTensor<mem::AllocatedStorage<uint32_t, mem::alloc::heap>, uint32_t, 3, 4>
+    strided_matrix(Vector2s(1, 3), storage);
+
+  CHECK(all(m == strided_matrix));
+}
+
 TEST_CASE(tensor_reduction_and_broadcasting)
 {
   Vector3ui vui(1, 2, 3);
@@ -65,6 +81,8 @@ TEST_CASE(elwise_operations)
   CHECK(all(Vector3ui(1, 2, 3) + Vector3ui(1, 2, 3) == Vector3ui(2, 4, 6)));
   CHECK(all(Vector3ui(1, 2, 3) + 1 == Vector3ui(2, 3, 4)));
   CHECK(all(2 + Vector3ui(1, 2, 3) == Vector3ui(3, 4, 5)));
+  CHECK(all(cast_to<uint32_t>(Vector3f(1.2, 2.2, 3.2)) == Vector3ui(1, 2, 3)));
+  CHECK(distance(fmod(Vector3f(2, 4, 6), Vector3f(3, 3, 3)), Vector3ui(2, 1, 0)) <= 1e-5f);
 }
 
 TEST_CASE(tensor_util)
@@ -92,6 +110,9 @@ TEST_CASE(special_tensor_constants)
   CHECK(all(identity_matrix<double, 3>::make() == MatrixXXd<3, 3>(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0)));
   CHECK(all(identity_matrix<double, DYN>::make(3) == MatrixXXd<3, 3>(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0)));
   CHECK(all(math::consts::one<MatrixXXd<3, 3>>::get() == MatrixXXd<3, 3>(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0)));
+
+  CHECK(all(identity_matrix<double, 3>::make() == fromSupplier<double, 3, 3>([](size_t r, size_t c){return r == c ? 1 : 0;})));
+
   //CHECK((unit_vector::type<double>::length<4>::static_direction<2>::make() == Vector4d(0.0, 0.0, 1.0, 0.0)).all());
   //CHECK((unit_vector::type<double>::length<DYN>::static_direction<2>::make(4) == Vector4d(0.0, 0.0, 1.0, 0.0)).all());
   //CHECK((unit_vector::type<double>::length<4>::dynamic_direction::make(2) == Vector4d(0.0, 0.0, 1.0, 0.0)).all());

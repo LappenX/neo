@@ -124,6 +124,12 @@ public:
   static const MemoryType MEMORY_TYPE = LOCAL;
   using ElementType = TElementType;
 
+  static LocalStorage<TElementType, TSize> makeFromSize(size_t size)
+  {
+    ASSERT(size == TSize, "Dynamic size must equal static size");
+    return LocalStorage<TElementType, TSize>();
+  }
+
   __host__ __device__
   constexpr LocalStorage()
     : m_data{}
@@ -189,10 +195,29 @@ public:
   static const MemoryType MEMORY_TYPE = TAllocator::MEMORY_TYPE;
   using ElementType = TElementType;
 
+  static AllocatedStorage<TElementType, TAllocator> makeFromSize(size_t size)
+  {
+    return AllocatedStorage<TElementType, TAllocator>(size);
+  }
+
+  __host__ __device__
+  AllocatedStorage()
+    : m_data(NULL)
+    , m_owner(false)
+  {
+  }
+
   __host__ __device__
   AllocatedStorage(size_t size)
     : m_data(TAllocator::template allocate<TElementType>(size))
     , m_owner(true)
+  {
+  }
+
+  __host__ __device__
+  AllocatedStorage(TElementType* data) // TODO: allocator can/ should be void for this constructor
+    : m_data(data)
+    , m_owner(false)
   {
   }
 
@@ -243,6 +268,7 @@ public:
   __host__ __device__
   TElementType& operator[](size_t index)
   {
+    ASSERT(m_data != NULL, "Storage data pointer is null");
     static_assert(!(MEMORY_TYPE == HOST && IS_ON_DEVICE), "Cannot access host elements from device");
     static_assert(!(MEMORY_TYPE == DEVICE && IS_ON_HOST), "Cannot access device elements from host");
     return m_data[index];
@@ -251,6 +277,7 @@ public:
   __host__ __device__
   const TElementType& operator[](size_t index) const
   {
+    ASSERT(m_data != NULL, "Storage data pointer is null");
     static_assert(!(MEMORY_TYPE == HOST && IS_ON_DEVICE), "Cannot access host elements from device");
     static_assert(!(MEMORY_TYPE == DEVICE && IS_ON_HOST), "Cannot access device elements from host");
     return m_data[index];

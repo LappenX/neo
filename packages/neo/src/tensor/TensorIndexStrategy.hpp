@@ -24,6 +24,7 @@ struct ColMajorIndexStrategyHelper1
     return toIndex(util::forward<TRestCoords>(coords)...);
   }
 
+  template <size_t... TDims>
   __host__ __device__
   static size_t toIndex()
   {

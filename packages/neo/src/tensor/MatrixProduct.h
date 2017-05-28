@@ -22,7 +22,7 @@ public:
 
   __host__ __device__
   MatrixProduct(TMatrixTypeLeft left, TMatrixTypeRight right)
-    : SuperType(left.rows(), right.cols())
+    : SuperType(left.template dim<0>(), right.template dim<1>())
     , m_left(left)
     , m_right(right)
   {
@@ -33,7 +33,7 @@ public:
   ElementType get_element_impl(TCoordArgTypes&&... coords) const
   {
     ElementType sum = 0;
-    for (size_t k = 0; k < m_left.cols(); k++)
+    for (size_t k = 0; k < m_left.template dim<1>(); k++)
     {
       sum += m_left(getNthCoordinate<0>(util::forward<TCoordArgTypes>(coords)...), k) * m_right(k, getNthCoordinate<1>(util::forward<TCoordArgTypes>(coords)...));
     }
@@ -44,8 +44,8 @@ public:
   __host__ __device__
   size_t dyn_dim_impl() const
   {
-    return tuple::conditional<TIndex == 0>::get(m_left.rows(),
-           tuple::conditional<TIndex == 1>::get(m_right.cols(), 1));
+    return tuple::conditional<TIndex == 0>::get(m_left.template dim<0>(),
+           tuple::conditional<TIndex == 1>::get(m_right.template dim<1>(), 1));
   }
 
   __host__ __device__
@@ -53,8 +53,8 @@ public:
   {
     switch (index)
     {
-      case 0: return m_left.rows();
-      case 1: return m_right.cols();
+      case 0: return m_left.template dim<0>();
+      case 1: return m_right.template dim<1>();
       default: return 1;
     }
   }

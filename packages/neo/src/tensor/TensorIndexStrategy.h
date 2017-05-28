@@ -1,7 +1,8 @@
 #include "Tensor.h"
 
 namespace tensor {
-
+// TODO: rename to something along the lines of "LowDimMajor" to avoid confusion between cases where first coordinate
+//       refers to the row index (matrices) and cases where it refers to the horizontal x-coordinate (images)
 struct ColMajorIndexStrategy
 {
   template <size_t... TDims, typename... TCoords, ENABLE_IF_ARE_SIZE_T(TCoords...)>

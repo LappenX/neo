@@ -42,21 +42,7 @@ template <typename TThisType, typename TElementType, TENSOR_DIMS_DECLARE_NO_DEFA
 class Tensor : public ElementAccessFunctions<TThisType, TElementType, TensorTraits<TThisType>::RETURNS_REFERENCE>
 {
 public:
-  static_assert(!is_tensor_v<TElementType>::value, "Tensors of tensors are not allowed");
   using ThisType = TThisType;
-  // TODO: private member access for sub types, only allow size_t... there, same for dim methods?
-
-  __host__ __device__
-  size_t rows() const
-  {
-    return this->template dim<0>();
-  }
-
-  __host__ __device__
-  size_t cols() const
-  {
-    return this->template dim<1>();
-  }
 
   template <size_t TIndex>
   __host__ __device__

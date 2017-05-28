@@ -27,5 +27,7 @@
 #include "MatrixProduct.h"
 #include "TensorStreamOutput.h"
 #include "IdentityMatrix.h"
+#include "ElementSupplierTensor.h"
+#include "StridedTensor.h"
 
 #endif // TENSOR_H

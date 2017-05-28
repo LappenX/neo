@@ -56,7 +56,7 @@ public:
   DynamicTensorStoreDimensions(TDimensionArgs&&... args)
     : SuperType(util::forward<TDimensionArgs>(args)...)
   {
-    copyDims(m_dims, util::forward<TDimensionArgs>(args)...);
+    tensor::copyDims(m_dims, util::forward<TDimensionArgs>(args)...);
   }
 
   template <size_t TIndex>
@@ -93,22 +93,12 @@ public:
   using SuperType = DynamicTensorStoreDimensions<ThisType, TElementType, TDims...>;
   using IndexStrategy = TIndexStrategy;
 
-  template <typename... TDimensionArgs, ENABLE_IF_SUPERTENSOR_CONSTRUCTIBLE(TDimensionArgs...), ENABLE_IF_ARE_SIZE_T(TDimensionArgs...)>
+  template <typename... TDimensionArgs, ENABLE_IF_SUPERTENSOR_CONSTRUCTIBLE(TDimensionArgs...)>
   __host__ __device__
   DenseDynamicStorageTensor(TDimensionArgs&&... args)
     : SuperType(util::forward<TDimensionArgs>(args)...)
-    , m_storage(math::multiply(args...))
+    , m_storage(dimensionProduct(util::forward<TDimensionArgs>(args)...))
   {
-  }
-
-  template <typename TVectorType2, typename TElementType2, size_t TVectorLength2,
-    ENABLE_IF_SUPERTENSOR_CONSTRUCTIBLE(const Vector<TVectorType2, TElementType2, TVectorLength2>&)>
-  __host__ __device__
-  DenseDynamicStorageTensor(const Vector<TVectorType2, TElementType2, TVectorLength2>& dim_vec)
-    : SuperType(dim_vec)
-    , m_storage(vectorProduct(dim_vec, tmp::value_sequence::ascending_numbers_t<TVectorLength2>()))
-  {
-    static_assert(TVectorLength2 != DYN, "Cannot have dynamic length dimension vector");
   }
 
   __host__ __device__
@@ -141,12 +131,6 @@ public:
 
 private:
   TStorageType m_storage;
-
-  template <typename TVectorType2, typename TElementType2, size_t TVectorLength2, size_t... TIndices>
-  static size_t vectorProduct(const Vector<TVectorType2, TElementType2, TVectorLength2>& dim_vec, tmp::value_sequence::Sequence<size_t, TIndices...>)
-  {
-    return math::multiply(dim_vec(TIndices)...);
-  }
 };
 
 template <typename TStorageType, typename TElementType, typename TIndexStrategy, size_t... TDims>

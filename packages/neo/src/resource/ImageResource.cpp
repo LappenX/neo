@@ -1,52 +1,69 @@
 #include "ImageResource.h"
 
+#include <util/Assert.h>
+
+
+
 namespace res {
 
-FreeImageLibrary FreeImageLibrary::INSTANCE = FreeImageLibrary();
+namespace freeimage {
+
+void init()
+{
+  FreeImage_Initialise(true);
+  const char* version = FreeImage_GetVersion();
+  LOG(info, "res") << "Initialized FreeImage library version: " << version;
+}
+
+void deinit()
+{
+  FreeImage_DeInitialise();
+  LOG(info, "res") << "Deinitialized FreeImage library";
+}
+
+} // end of ns freeimage
 
 ImageFile::ImageFile(const ImageFileRID& rid)
   : RIDResource<ImageFileRID>(rid)
   , m_handle(0)
-  , m_bits_per_pixel(-1)
-  , m_width(-1)
-  , m_height(-1)
-  , m_data(0)
 {
-  init(FreeImageLibrary::INSTANCE);
   FREE_IMAGE_FORMAT format = rid.getFormat();
   if (format == FIF_UNKNOWN)
   {
-    FreeImage_GetFileType(rid.getPath().c_str(), 0);
+    format = FreeImage_GetFileType(rid.getPath().c_str(), 0);
     if (format == FIF_UNKNOWN)
     {
-      LOG(warning, "ImageFile") << "Could not determine image file format for file '" << rid.getPath().c_str()
+      LOG(warning, "res") << "Could not determine image file format for file '" << rid.getPath().c_str()
         << "', attempting to get format from file extension";
       
       format = FreeImage_GetFIFFromFilename(rid.getPath().c_str());
       if (!FreeImage_FIFSupportsReading(format))
       {
-        throw InitializationException("Format of " + rid.toResourceString() + " is not supported");
+        throw ResourceLoadException(rid, "Format of " + rid.toResourceString() + " is not supported");
       }
     }
   }
 
-  // bitmap32 = FreeImage_ConvertTo32Bits(bitmap);
+  // TODO: bitmap32 = FreeImage_ConvertTo32Bits(bitmap);
 
   m_handle = FreeImage_Load(format, rid.getPath().c_str());
   if (!m_handle)
   {
-    throw InitializationException("Failed to load " + rid.toResourceString());
+    throw ResourceLoadException(rid);
   }
-  m_bits_per_pixel = FreeImage_GetBPP(m_handle);
-  m_width = FreeImage_GetWidth(m_handle);
-  m_height = FreeImage_GetHeight(m_handle);
-  m_data = FreeImage_GetBits(m_handle);
+  
+  size_t bits_per_pixel = FreeImage_GetBPP(m_handle);
+  ASSERT(bits_per_pixel / 8 * 8 == bits_per_pixel, "Image bits-per-pixel must be a multiple of 8");
+  m_image = ImageType(
+          tensor::Vector3s(1, bits_per_pixel / 8, FreeImage_GetPitch(m_handle)),
+          mem::AllocatedStorage<uint8_t, mem::alloc::heap>(FreeImage_GetBits(m_handle)),
+          FreeImage_GetHeight(m_handle), FreeImage_GetWidth(m_handle), bits_per_pixel/ 8
+        );
 }
 
 ImageFile::~ImageFile()
 {
   FreeImage_Unload(m_handle);
-  deinit(FreeImageLibrary::INSTANCE);
 }
 
 } // res

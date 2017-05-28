@@ -7,11 +7,14 @@
 #include <GL/glew.h>
 #include <GL/gl.h>
 
+#include <util/Logging.h>
+
 namespace gl {
 
 void glfwErrorCallback(int error, const char* description)
 {
-  // TODO: implement glfwErrorCallback
+  LOG(fatal, "gl") << "Glfw error (" << error << "):" << description << "\n";
+  exit(EXIT_FAILURE);
 }
 
 namespace glfw {

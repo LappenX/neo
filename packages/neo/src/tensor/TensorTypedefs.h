@@ -109,6 +109,11 @@ class DenseStaticStorageTensor;
 template <typename TElementType, typename TIndexStrategy, size_t... TDims>
 using DenseLocalStorageTensor = DenseStaticStorageTensor<mem::LocalStorage<TElementType, math::multiply(TDims...)>, TElementType, TIndexStrategy, TDims...>;
 
+#define UNWRAP_NAME(POSTFIX) DenseLocalStorageTensor##POSTFIX
+#define UNWRAP_ARGS_DECLARE(...) typename TElementType, typename TIndexStrategy, __VA_ARGS__
+#define UNWRAP_ARGS_USE(...) TElementType, TIndexStrategy, __VA_ARGS__
+#include "UnwrapSequenceHelper.hpp"
+
 template <typename TElementType, size_t TRows, size_t TCols, typename TIndexStrategy = DefaultIndexStrategy>
 using MatrixXXT = DenseLocalStorageTensor<TElementType, TIndexStrategy, TRows, TCols>;
 
@@ -167,6 +172,11 @@ using Matrix13d = MatrixXXd<1, 3>;
 using Matrix23d = MatrixXXd<2, 3>;
 using Matrix32d = MatrixXXd<3, 2>;
 using Matrix34d = MatrixXXd<3, 4>;
+
+using Matrix13ui = MatrixXXui<1, 3>;
+using Matrix23ui = MatrixXXui<2, 3>;
+using Matrix32ui = MatrixXXui<3, 2>;
+using Matrix34ui = MatrixXXui<3, 4>;
 
 using Matrix2d = MatrixXd<2>;
 using Matrix3d = MatrixXd<3>;

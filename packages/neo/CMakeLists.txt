@@ -40,7 +40,7 @@ ADD_DEPENDENCIES(tensor_cuda_test tensor_non_cuda_test)
 NEO_BEGIN_TARGET(main_ogl EXE)
   NEO_ADD_INCLUDE_DIRECTORIES(src)
   NEO_ADD_SOURCES(src/main_ogl.cpp src/util/Logging.cpp src/gl/core/VertexArrayObject.cpp src/resource/TextResource.cpp src/gl/core/Shader.cpp
-    src/gl/target/GlfwWindow.cpp src/gl/GlError.cpp src/gl/GlLibrary.cpp)
+    src/gl/target/GlfwWindow.cpp src/gl/GlError.cpp src/gl/GlLibrary.cpp src/resource/ImageResource.cpp)
   NEO_ADD_DEPENDENCIES(Boost GLFW OPENGL GLEW FreeImage Threads)
   SET(NEO_CXX_STANDARD 11)
 NEO_END_TARGET()
