@@ -6,6 +6,24 @@
 #include <utility>
 #include <type_traits>
 
+namespace detail {
+
+static const union
+{
+  uint8_t bytes[4];
+  uint32_t value;
+} endianness_helper = {{0, 1, 2, 3}};
+
+} // end of ns detail
+
+#define IS_LITTLE_ENDIAN (::detail::endianness_helper.value == 0x03020100ul)
+#define IS_BIG_ENDIAN (::detail::endianness_helper.value == 0x00010203ul)
+
+
+
+
+
+
 
 
 #define NO_COPYING(CLASS, ...)  CLASS __VA_ARGS__ & operator=(const CLASS __VA_ARGS__ &) = delete; \
