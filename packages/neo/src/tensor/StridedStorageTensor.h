@@ -58,16 +58,6 @@ public:
     // TODO: Can anything be asserted with strides at all?
   }
 
-  template <typename TStrideVector, typename TStorageType2, typename... TDimensionArgs, ENABLE_IF_SUPERTENSOR_CONSTRUCTIBLE(TDimensionArgs...)>
-  __host__ __device__
-  StridedStorageTensor(TStrideVector&& stride_vector, TStorageType2&& other_storage, TDimensionArgs&&... args)
-    : SuperType(util::forward<TDimensionArgs>(args)...)
-    , m_storage(util::forward<TStorageType2>(other_storage))
-    , m_stride_vector(stride_vector)
-  {
-    // TODO: assert that all elements accessible via stride_vector are in bounds of other_storage 
-  }
-
   __host__ __device__
   TStorageType& storage()
   {
