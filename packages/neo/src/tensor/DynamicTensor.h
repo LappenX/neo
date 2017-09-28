@@ -2,6 +2,53 @@
 
 namespace tensor {
 
+namespace detail {
+
+template <bool TInDynRange>
+struct DynamicTensorDimChecker
+{
+  template <size_t I, size_t TDim0, size_t... TDims, typename TVectorType2, typename TElementType2, size_t TVectorLength2>
+  __host__ __device__
+  static bool check(const Vector<TVectorType2, TElementType2, TVectorLength2>& dims)
+  {
+    static_assert(TVectorLength2 != DYN, "Dimension vector must be statically sized");
+    return (TDim0 == DYN || TDim0 == dims(I))
+      && DynamicTensorDimChecker<math::lt(I + 1, TVectorLength2)>::template check<I + 1, TDims...>(dims);
+  }
+
+  template <size_t I, typename TVectorType2, typename TElementType2, size_t TVectorLength2>
+  __host__ __device__
+  static bool check(const Vector<TVectorType2, TElementType2, TVectorLength2>& dims)
+  {
+    static_assert(TVectorLength2 != DYN, "Dimension vector must be statically sized");
+    return (1 == dims(I))
+      && DynamicTensorDimChecker<math::lt(I + 1, TVectorLength2)>::template check<I + 1>(dims);
+  }
+};
+
+template <>
+struct DynamicTensorDimChecker<false>
+{
+  template <size_t I, size_t TDim0, size_t... TDims, typename TVectorType2, typename TElementType2, size_t TVectorLength2>
+  __host__ __device__
+  static bool check(const Vector<TVectorType2, TElementType2, TVectorLength2>& dims)
+  {
+    static_assert(TVectorLength2 != DYN, "Dimension vector must be statically sized");
+    return (TDim0 == DYN || TDim0 == 1)
+      && DynamicTensorDimChecker<false>::template check<I + 1, TDims...>(dims);
+  }
+
+  template <size_t I, typename TVectorType2, typename TElementType2, size_t TVectorLength2>
+  __host__ __device__
+  static bool check(const Vector<TVectorType2, TElementType2, TVectorLength2>& dims)
+  {
+    static_assert(TVectorLength2 != DYN, "Dimension vector must be statically sized");
+    return true;
+  }
+};
+
+} // end of ns detail
+
 template <typename TThisType, typename TElementType, size_t... TDims>
 class DynamicTensor : public Tensor<TThisType, TElementType, TDims...>
 {
@@ -9,18 +56,21 @@ public:
   static const size_t NON_TRIVIAL_DIMENSIONS_NUM = non_trivial_dimensions_num_v<DimSeq<TDims...>>::value;
   using SuperType = Tensor<TThisType, TElementType, TDims...>;
 
-  // TODO: allow for arguments that dont construct VectorXs if they end in trivial dimensions or imply trivial dimensions
-  template <typename... TDimensionArgs>
+  template <typename... TDimensionArgs, ENABLE_IF_ARE_SIZE_T(TDimensionArgs...)>
   __host__ __device__
   DynamicTensor(TDimensionArgs&&... args)
   {
+    ASSERT((detail::DynamicTensorDimChecker<math::lt(0, sizeof...(TDimensionArgs))>::template check<0, TDims...>(
+        VectorXs<sizeof...(TDimensionArgs)>(util::forward<TDimensionArgs>(args)...)
+      )), "Dynamic dimensions do not match static dimensions");
   }
 
   template <typename TVectorType2, typename TElementType2, size_t TVectorLength2>
   __host__ __device__
   DynamicTensor(const Vector<TVectorType2, TElementType2, TVectorLength2>& dims)
   {
-    // TODO: ASSERT dims satisfies TDims... (rest equals 1)
+    ASSERT((detail::DynamicTensorDimChecker<math::lt(0, TVectorLength2)>::template check<0, TDims...>(dims)),
+      "Dynamic dimensions do not match static dimensions");
   }
 
   template <size_t TIndex>
@@ -100,7 +150,7 @@ public:
     , m_storage(dimensionProduct(util::forward<TDimensionArgs>(args)...))
   {
   }
-
+  
   __host__ __device__
   TStorageType& storage()
   {
