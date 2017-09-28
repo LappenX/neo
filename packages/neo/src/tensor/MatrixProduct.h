@@ -2,6 +2,40 @@
 
 namespace tensor {
 
+namespace detail {
+
+template <size_t TIndex>
+struct MatrixProductDimHelper
+{
+  template <typename TMatrixTypeLeft, typename TMatrixTypeRight>
+  static size_t get(TMatrixTypeLeft&& left, TMatrixTypeRight&& right)
+  {
+    return 1;
+  }
+};
+
+template <>
+struct MatrixProductDimHelper<0>
+{
+  template <typename TMatrixTypeLeft, typename TMatrixTypeRight>
+  static size_t get(TMatrixTypeLeft&& left, TMatrixTypeRight&& right)
+  {
+    return left.template dim<0>();
+  }
+};
+
+template <>
+struct MatrixProductDimHelper<1>
+{
+  template <typename TMatrixTypeLeft, typename TMatrixTypeRight>
+  static size_t get(TMatrixTypeLeft&& left, TMatrixTypeRight&& right)
+  {
+    return right.template dim<1>();
+  }
+};
+
+} // end of ns detail
+
 template <typename TMatrixTypeLeft, typename TMatrixTypeRight>
 class MatrixProduct : public StaticOrDynamicTensorFromSequence<
                                         MatrixProduct<TMatrixTypeLeft, TMatrixTypeRight>,
@@ -44,8 +78,7 @@ public:
   __host__ __device__
   size_t dyn_dim_impl() const
   {
-    return tuple::conditional<TIndex == 0>::get(m_left.template dim<0>(),
-           tuple::conditional<TIndex == 1>::get(m_right.template dim<1>(), 1));
+    return detail::MatrixProductDimHelper<TIndex>::get(m_left, m_right);
   }
 
   __host__ __device__
