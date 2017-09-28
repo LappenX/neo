@@ -68,7 +68,7 @@ bool isQuadratic(const Matrix<TTensorType, TElementType, TRows, TCols>& m)
 OPERATION_TT(dot, sum(elwiseMul(t1, t2)))
 OPERATION_T(length, math::sqrt(tensor::dot(t, t)))
 OPERATION_TT(distance, tensor::length(t2 - t1))
-OPERATION_T(normalize, t / math::sqrt(tensor::dot(t, t)))
+OPERATION_T(normalize, t * (static_cast<tensor_elementtype_t<TTensorType>>(1) / math::sqrt(tensor::dot(t, t))))
 
 #undef OPERATION_T
 #undef OPERATION_TT
