@@ -191,40 +191,94 @@ struct NthValueOfVectorHelper<false, TRank, TDefault>
 
 
 
-template <typename TVectorType1, typename TElementType1, size_t TVectorLength1, typename TVectorType2, typename TElementType2, size_t TVectorLength2>
-__host__ __device__
-bool areSameDimensions2(const Vector<TVectorType1, TElementType1, TVectorLength1>& dims1,
-                         const Vector<TVectorType2, TElementType2, TVectorLength2>& dims2)
+template <size_t TVectorLength1, size_t TVectorLength2>
+struct AreSameDimensionsHelper
 {
-  for (size_t i = 0; i < math::min(dims1.template dim<0>(), dims2.template dim<0>()); i++)
+  template <typename TVectorType1, typename TElementType1, typename TVectorType2, typename TElementType2>
+  __host__ __device__
+  static bool areSameDimensions(const Vector<TVectorType1, TElementType1, TVectorLength1>& dims1,
+                           const Vector<TVectorType2, TElementType2, TVectorLength2>& dims2)
   {
-    if (dims1(i) != dims2(i))
+    for (size_t i = 0; i < math::min(dims1.template dim<0>(), dims2.template dim<0>()); i++)
     {
-      return false;
+      if (dims1(i) != dims2(i))
+      {
+        return false;
+      }
     }
+    if (dims1.template dim<0>() > dims2.template dim<0>())
+    {
+      for (size_t i = dims2.template dim<0>(); i < dims1.template dim<0>(); i++)
+      {
+        if (dims1(i) != 1)
+        {
+          return false;
+        }
+      }
+    }
+    else
+    {
+      for (size_t i = dims1.template dim<0>(); i < dims2.template dim<0>(); i++)
+      {
+        if (dims2(i) != 1)
+        {
+          return false;
+        }
+      }
+    }
+    return true;
   }
-  if (dims1.template dim<0>() > dims2.template dim<0>())
+};
+
+template <size_t TVectorLength1>
+struct AreSameDimensionsHelper<TVectorLength1, 0>
+{
+  template <typename TVectorType1, typename TElementType1, typename TVectorType2, typename TElementType2>
+  __host__ __device__
+  static bool areSameDimensions(const Vector<TVectorType1, TElementType1, TVectorLength1>& dims1,
+                           const Vector<TVectorType2, TElementType2, 0>& dims2)
   {
-    for (size_t i = dims2.template dim<0>(); i < dims1.template dim<0>(); i++)
+    for (size_t i = 0; i < dims1.template dim<0>(); i++)
     {
       if (dims1(i) != 1)
       {
         return false;
       }
     }
+    return true;
   }
-  else
+};
+
+template <size_t TVectorLength2>
+struct AreSameDimensionsHelper<0, TVectorLength2>
+{
+  template <typename TVectorType1, typename TElementType1, typename TVectorType2, typename TElementType2>
+  __host__ __device__
+  static bool areSameDimensions(const Vector<TVectorType1, TElementType1, 0>& dims1,
+                           const Vector<TVectorType2, TElementType2, TVectorLength2>& dims2)
   {
-    for (size_t i = dims1.template dim<0>(); i < dims2.template dim<0>(); i++)
+    for (size_t i = 0; i < dims2.template dim<0>(); i++)
     {
       if (dims2(i) != 1)
       {
         return false;
       }
     }
+    return true;
   }
-  return true;
-}
+};
+
+template <>
+struct AreSameDimensionsHelper<0, 0>
+{
+  template <typename TVectorType1, typename TElementType1, typename TVectorType2, typename TElementType2>
+  __host__ __device__
+  static bool areSameDimensions(const Vector<TVectorType1, TElementType1, 0>& dims1,
+                           const Vector<TVectorType2, TElementType2, 0>& dims2)
+  {
+    return true;
+  }
+};
 
 template <typename TVectorType1, typename TElementType1, size_t TVectorLength1, typename TVectorType2, typename TElementType2, size_t TVectorLength2, typename... TRestVectorTypes>
 __host__ __device__
@@ -232,7 +286,7 @@ bool areSameDimensions(const Vector<TVectorType1, TElementType1, TVectorLength1>
                          const Vector<TVectorType2, TElementType2, TVectorLength2>& dims2,
                          TRestVectorTypes&&... rest)
 {
-  return areSameDimensions2(dims1, dims2) && areSameDimensions(dims1, util::forward<TRestVectorTypes>(rest)...);
+  return AreSameDimensionsHelper<TVectorLength1, TVectorLength2>::areSameDimensions(dims1, dims2) && areSameDimensions(dims1, util::forward<TRestVectorTypes>(rest)...);
 }
 
 template <typename TVectorType1, typename TElementType1, size_t TVectorLength1>
