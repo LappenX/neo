@@ -33,7 +33,7 @@ TEST_CASE(storage_tensor_values)
 
 TEST_CASE(strided_tensor)
 {
-  Matrix34ui m(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12);
+  MatrixXXd<3, 4, ColMajorIndexStrategy> m(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12);
 
   mem::AllocatedStorage<uint32_t, mem::alloc::heap> storage(12);
   for (size_t i = 0; i < 12; i++)
@@ -42,7 +42,8 @@ TEST_CASE(strided_tensor)
   }
 
   StridedStorageTensor<mem::AllocatedStorage<uint32_t, mem::alloc::heap>, uint32_t, 3, 4>
-    strided_matrix(Vector2s(1, 3), storage);
+    strided_matrix(Vector2s(1, 3));
+  strided_matrix.storage() = storage;
 
   CHECK(all(m == strided_matrix));
 }
@@ -119,10 +120,25 @@ TEST_CASE(special_tensor_constants)
   //CHECK((unit_vector::type<double>::length<DYN>::dynamic_direction::make(2, 4) == Vector4d(0.0, 0.0, 1.0, 0.0)).all());
 }
 
-/*
+
 TEST_CASE(tensor_index_strategy)
 {
-  CHECK((ColMajorIndexStrategy::fromIndex<11, 4, 8>(ColMajorIndexStrategy::toIndex<11, 4, 8>(5, 3, 7)) == Vector3s(5, 3, 7)).all());
+  CHECK(ColMajorIndexStrategy::toIndex<11, 4, 8>(5, 3, 7) == RowMajorIndexStrategy::toIndex<8, 4, 11>(7, 3, 5));
+
+  CHECK(RowMajorIndexStrategy::toIndex<8, 4, 11, 1, 1, 1>(7, 3, 5) == RowMajorIndexStrategy::toIndex<8, 4, 11>(7, 3, 5, 0, 0, 0));
+  CHECK(ColMajorIndexStrategy::toIndex<8, 4, 11, 1, 1, 1>(7, 3, 5) == ColMajorIndexStrategy::toIndex<8, 4, 11>(7, 3, 5, 0, 0, 0));
+  CHECK(RowMajorIndexStrategy::toIndex(0, 0, 0) == RowMajorIndexStrategy::toIndex<1, 1, 1>());
+  CHECK(ColMajorIndexStrategy::toIndex(0, 0, 0) == ColMajorIndexStrategy::toIndex<1, 1, 1>());
+
+  CHECK(ColMajorIndexStrategy::toIndex(Vector3s(11, 4, 8), 5, 3, 7) == RowMajorIndexStrategy::toIndex(Vector3s(8, 4, 11), 7, 3, 5));
+
+  CHECK(RowMajorIndexStrategy::toIndex(VectorXs<6>(11, 4, 8, 1, 1, 1), 5, 3, 7) == RowMajorIndexStrategy::toIndex(VectorXs<3>(11, 4, 8), 5, 3, 7, 0, 0, 0));
+  CHECK(ColMajorIndexStrategy::toIndex(VectorXs<6>(11, 4, 8, 1, 1, 1), 5, 3, 7) == ColMajorIndexStrategy::toIndex(VectorXs<3>(11, 4, 8), 5, 3, 7, 0, 0, 0));
+  CHECK(RowMajorIndexStrategy::toIndex(VectorXs<0>(), 0, 0, 0) == RowMajorIndexStrategy::toIndex(VectorXs<3>(1, 1, 1)));
+  CHECK(ColMajorIndexStrategy::toIndex(VectorXs<0>(), 0, 0, 0) == ColMajorIndexStrategy::toIndex(VectorXs<3>(1, 1, 1)));
+  
+
+  /*CHECK((ColMajorIndexStrategy::fromIndex<11, 4, 8>(ColMajorIndexStrategy::toIndex<11, 4, 8>(5, 3, 7)) == Vector3s(5, 3, 7)).all());
   CHECK((ColMajorIndexStrategy::fromIndex(Vector3s(11, 4, 8), ColMajorIndexStrategy::toIndex<11, 4, 8>(5, 3, 7)) == Vector3s(5, 3, 7)).all());
   CHECK(ColMajorIndexStrategy::toIndex<11, 4, 8>(5, 3, 7) == ColMajorIndexStrategy::toIndex(Vector3s(11, 4, 8), Vector3s(5, 3, 7)));
   CHECK(ColMajorIndexStrategy::toIndex<11, 4, 8>(5, 3, 7) == ColMajorIndexStrategy::toIndex<11, 4, 8>(Vector3s(5, 3, 7)));
@@ -138,9 +154,9 @@ TEST_CASE(tensor_index_strategy)
 
   CHECK(RowMajorIndexStrategy::toIndex<11, 4, 8>(Vector3s(5, 0, 0)) == RowMajorIndexStrategy::toIndex(Vector3s(11, 4, 8), Vector1s(5)));
   CHECK(RowMajorIndexStrategy::toIndex<11, 4, 8>(Vector3s(5, 0, 0)) == RowMajorIndexStrategy::toIndex(Vector3s(11, 4, 8), 5));
-  CHECK(RowMajorIndexStrategy::toIndex<11, 4, 8>(Vector3s(5, 0, 0)) == RowMajorIndexStrategy::toIndex<11, 4, 8>(5));
+  CHECK(RowMajorIndexStrategy::toIndex<11, 4, 8>(Vector3s(5, 0, 0)) == RowMajorIndexStrategy::toIndex<11, 4, 8>(5));*/
 }
-
+/*
 TEST_CASE(tensor_reference)
 {
   MatrixXXd<3, 4, ColMajorIndexStrategy> m(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0);
