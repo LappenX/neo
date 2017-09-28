@@ -36,7 +36,7 @@ using reverse_t = detail::reverse_t<TSequence>;
 template <typename TSequence, size_t TLength>
 using cut_to_length_from_start_t = detail::cut_to_length_from_start_t<TSequence, TLength>;
 template <typename TSequence, size_t TLength>
-using cut_to_length_from_end_t = detail::cut_to_length_from_end_t<TSequence, TLength>;;
+using cut_to_length_from_end_t = detail::cut_to_length_from_end_t<TSequence, TLength>;
 template <typename T, typename TSequence, T TElement>
 TVALUE(bool, contains_v, detail::SequenceContains<T, TSequence, TElement>::value)
 template <size_t N, typename TSequence>

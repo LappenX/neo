@@ -31,7 +31,6 @@ public:
   __host__ __device__
   ElementType get_element_impl(TCoordArgTypes&&... coords) const
   {
-    // TODO: assert non_trivial_coordinates_num <= 1
     switch (getNthCoordinate<0>(util::forward<TCoordArgTypes>(coords)...))
     {
       case 0: return m_left(1) * m_right(2) - m_left(2) * m_right(1);

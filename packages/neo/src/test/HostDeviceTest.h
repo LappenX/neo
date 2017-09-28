@@ -17,11 +17,11 @@
   } \
   __global__ void kernel_##NAME##_test()
 
-#define CHECK(...) ASSERT(__VA_ARGS__, "CUDA device test failed: " << #__VA_ARGS__)
+#define CHECK(...) ASSERT((__VA_ARGS__), "CUDA device test failed: " << #__VA_ARGS__)
 
 #else
 
 #define TEST_CASE(NAME) BOOST_AUTO_TEST_CASE(NAME)
-#define CHECK(...) BOOST_CHECK(__VA_ARGS__)
+#define CHECK(...) BOOST_CHECK((__VA_ARGS__))
 
 #endif

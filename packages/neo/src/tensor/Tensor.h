@@ -28,6 +28,6 @@
 #include "TensorStreamOutput.h"
 #include "IdentityMatrix.h"
 #include "ElementSupplierTensor.h"
-#include "StridedTensor.h"
+#include "StridedStorageTensor.h"
 
 #endif // TENSOR_H

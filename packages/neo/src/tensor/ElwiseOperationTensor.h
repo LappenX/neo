@@ -38,7 +38,7 @@ class ElwiseOperationTensor : public StaticOrDynamicTensorFromSequence<
                                         static_dimseq_from_tensors_t<TTensorTypesIn...>
                               >
 {
-public: // TODO: take operation in constructor and store here
+public:
   static_assert(sizeof...(TTensorTypesIn) > 0, "Invalid number of input tensors");
 
   using ElementType = ElwiseOperationElementType<TOperation, TTensorTypesIn...>;
@@ -158,7 +158,7 @@ auto cast_to(TTensorType&& t)
 RETURN_AUTO(elwise<math::functor::cast_to<TNewElementType>>(math::functor::cast_to<TNewElementType>(),
   util::forward<TTensorType>(t)
 ))
-
+// TODO: inplace operators, like operator += etc
 
 ELWISE_OP_TT(operator+, math::functor::add);
 ELWISE_OP_TS(operator+, math::functor::add);
@@ -169,7 +169,7 @@ ELWISE_OP_TT(operator-, math::functor::subtract);
 ELWISE_OP_ST(operator-, math::functor::subtract);
 ELWISE_OP_TS(operator-, math::functor::subtract);
 
-ELWISE_OP_TT(elwiseMul, math::functor::multiply); // TODO: .elwise() Marker or broadcasting?
+ELWISE_OP_TT(elwiseMul, math::functor::multiply);
 ELWISE_OP_TS(operator*, math::functor::multiply);
 ELWISE_OP_ST(operator*, math::functor::multiply);
 

@@ -38,10 +38,17 @@ public:
   }
 };
 
+template <typename... TArgs>
+constexpr size_t multiply_all_but_first(size_t dim0, TArgs... dims)
+{
+  return math::multiply(dims...);
+}
+
 template <typename TThisType, typename TElementType, TENSOR_DIMS_DECLARE_NO_DEFAULT>
 class Tensor : public ElementAccessFunctions<TThisType, TElementType, TensorTraits<TThisType>::RETURNS_REFERENCE>
 {
 public:
+  static_assert(multiply_all_but_first(TENSOR_DIMS_USE) != 0, "Only first dimension can be zero");
   using ThisType = TThisType;
 
   template <size_t TIndex>

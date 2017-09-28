@@ -124,6 +124,7 @@ public:
   static const MemoryType MEMORY_TYPE = LOCAL;
   using ElementType = TElementType;
 
+  __host__ __device__
   static LocalStorage<TElementType, TSize> makeFromSize(size_t size)
   {
     ASSERT(size == TSize, "Dynamic size must equal static size");
@@ -195,6 +196,7 @@ public:
   static const MemoryType MEMORY_TYPE = TAllocator::MEMORY_TYPE;
   using ElementType = TElementType;
 
+  __host__ __device__
   static AllocatedStorage<TElementType, TAllocator> makeFromSize(size_t size)
   {
     return AllocatedStorage<TElementType, TAllocator>(size);
@@ -233,6 +235,8 @@ public:
   {
     m_data = other.m_data;
     m_owner = false;
+
+    return *this;
   }
 
   __host__ __device__

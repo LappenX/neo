@@ -51,11 +51,11 @@ struct DimsHelper<DimSeq<TDims...>>
   }
 };
 
-static_assert(DimsHelper<DimSeq<1, 2, 1>>::non_trivial_dimensions_num() == 2, "non_trivial_dimensions_num not working!");
-static_assert(DimsHelper<DimSeq<4, 2, 6>>::nth_dimension(0) == 4, "nth_dimension not working!");
-static_assert(DimsHelper<DimSeq<4, 2, 6>>::nth_dimension(1) == 2, "nth_dimension not working!");
-static_assert(DimsHelper<DimSeq<4, 2, 6>>::nth_dimension(2) == 6, "nth_dimension not working!");
-static_assert(DimsHelper<DimSeq<4, 2, 6>>::nth_dimension(3) == 1, "nth_dimension not working!");
+static_assert(DimsHelper<DimSeq<1, 2, 1>>::non_trivial_dimensions_num() == 2, "non_trivial_dimensions_num not working");
+static_assert(DimsHelper<DimSeq<4, 2, 6>>::nth_dimension(0) == 4, "nth_dimension not working");
+static_assert(DimsHelper<DimSeq<4, 2, 6>>::nth_dimension(1) == 2, "nth_dimension not working");
+static_assert(DimsHelper<DimSeq<4, 2, 6>>::nth_dimension(2) == 6, "nth_dimension not working");
+static_assert(DimsHelper<DimSeq<4, 2, 6>>::nth_dimension(3) == 1, "nth_dimension not working");
 
 template <size_t N, typename TDimSeq>
 TVALUE(size_t, nth_dimension_v, DimsHelper<TDimSeq>::nth_dimension(N))
@@ -341,9 +341,8 @@ template <typename TCoordVectorType, typename... TDummies, ENABLE_IF(is_tensor_v
 __host__ __device__
 constexpr size_t getCoordinateNum()
 {
-  using BaseType = tensor_clean_t<TCoordVectorType>;
-  static_assert(BaseType::HAS_STATIC_DIMS, "Coordinate vector must have static dimensions");
-  return BaseType::ROWS;
+  static_assert(is_static_dimseq_v<tensor_dimseq_t<TCoordVectorType>>::value, "Coordinate vector must have static dimensions");
+  return nth_dimension_v<0, tensor_dimseq_t<TCoordVectorType>>::value;
 }
 
 } // end of ns detail

@@ -13,7 +13,7 @@ struct LocalElwise
   __host__ __device__
   static void copy(TTensorDest&& dest, TTensorSrc&& src, TCoords... coords)
   {
-    ASSERT(dest.template dim<I - 1>() == src.template dim<I - 1>(), "Inconcistent dimensions"); // TODO: remove all ! from assertions, grep
+    ASSERT(dest.template dim<I - 1>() == src.template dim<I - 1>(), "Inconsistent dimensions");
     size_t max = dest.template dim<I - 1>();
     for (size_t i = 0; i < max; i++)
     {
@@ -38,11 +38,11 @@ struct LocalElwise<0>
 
 struct LocalElwise
 {
-  // TODO: Assert static dims compatible
   template <typename TTensorDest, typename TTensorSrc>
   __host__ __device__
   static void copy(TTensorDest&& dest, TTensorSrc&& src)
   {
+    static_assert(are_compatible_dimseqs_v<tensor_dimseq_t<TTensorDest>, tensor_dimseq_t<TTensorSrc>>::value, "Incompatible static dimensions");
     ASSERT(areSameDimensions(dest.dims(), src.dims()), "Inconsistent runtime dimensions");
     ASSERT(mem::is_on_current<TensorTraits<tensor_clean_t<TTensorDest>>::MEMORY_TYPE>() && mem::is_on_current<TensorTraits<tensor_clean_t<TTensorSrc>>::MEMORY_TYPE>(), "Invalid memory types");
     const size_t MAX_RANK = math::min(non_trivial_dimensions_num_v<tensor_dimseq_t<TTensorDest>>::value, non_trivial_dimensions_num_v<tensor_dimseq_t<TTensorSrc>>::value);
