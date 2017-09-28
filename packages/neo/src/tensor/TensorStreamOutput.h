@@ -4,7 +4,7 @@ namespace tensor {
 
 namespace detail {
 
-template <size_t I>
+template <bool TZeroSized, size_t I>
 struct StreamOutputHelper
 {
   template <typename TStreamType, typename TTensorType, typename... TCoords>
@@ -15,7 +15,7 @@ struct StreamOutputHelper
     stream << "[";
     for (size_t i = 0; i < max; i++)
     {
-      StreamOutputHelper<I - 1>::output(stream, util::forward<TTensorType>(tensor), i, coords...);
+      StreamOutputHelper<TZeroSized, I - 1>::output(stream, util::forward<TTensorType>(tensor), i, coords...);
       if (I == 1 && i < max - 1)
       {
         stream << " ";
@@ -26,13 +26,24 @@ struct StreamOutputHelper
 };
 
 template <>
-struct StreamOutputHelper<0>
+struct StreamOutputHelper<false, 0>
 {
   template <typename TStreamType, typename TTensorType, typename... TCoords>
   __host__ __device__
   static void output(TStreamType& stream, TTensorType&& tensor, TCoords... coords)
   {
     stream << tensor(coords...);
+  }
+};
+
+template <size_t I>
+struct StreamOutputHelper<true, I>
+{
+  template <typename TStreamType, typename TTensorType, typename... TCoords>
+  __host__ __device__
+  static void output(TStreamType& stream, TTensorType&& tensor, TCoords... coords)
+  {
+    stream << "[]";
   }
 };
 
@@ -44,7 +55,9 @@ template <typename TStreamType, typename TTensorType, typename TElementType, siz
     && is_tensor_v<TTensorType>::value)>
 TStreamType& operator<<(TStreamType& stream, const Tensor<TTensorType, TElementType, TDims...>& tensor)
 {
-  detail::StreamOutputHelper<non_trivial_dimensions_num_v<DimSeq<TDims...>>::value>::output(stream, tensor);
+  detail::StreamOutputHelper<tmp::value_sequence::nth_element_v<0, DimSeq<TDims...>>::value == 0,
+                             non_trivial_dimensions_num_v<DimSeq<TDims...>>::value>
+    ::output(stream, tensor);
   return stream;
 }
 
