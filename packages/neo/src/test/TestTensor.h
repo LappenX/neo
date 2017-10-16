@@ -156,6 +156,23 @@ TEST_CASE(tensor_index_strategy)
   CHECK(RowMajorIndexStrategy::toIndex<11, 4, 8>(Vector3s(5, 0, 0)) == RowMajorIndexStrategy::toIndex(Vector3s(11, 4, 8), 5));
   CHECK(RowMajorIndexStrategy::toIndex<11, 4, 8>(Vector3s(5, 0, 0)) == RowMajorIndexStrategy::toIndex<11, 4, 8>(5));*/
 }
+
+#ifdef __CUDACC__
+TEST_CASE_ONLY_HOST(tensor_copying_host_device)
+{
+  MatrixXXd<3, 4, ColMajorIndexStrategy> m(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0);
+
+  MatrixXXd<3, 4, ColMajorIndexStrategy> h;
+  copier::TransferStorage::copy(h, m);
+  AllocMatrixd<mem::alloc::device, ColMajorIndexStrategy> d(3, 4);
+  copier::TransferStorage::copy(d, h);
+  copier::LocalElwise::copy(h, broadcast<3, 4>(SingletonT<double>(-1.2)));
+  copier::TransferStorage::copy(h, d);
+  CHECK_ONLY_HOST(all(m == h));
+}
+#endif
+
+
 /*
 TEST_CASE(tensor_reference)
 {
@@ -186,25 +203,7 @@ TEST_CASE(tensor_transformations)
 
 
 
-#ifdef __CUDACC__
-TEST_CASE_ONLY_HOST(tensor_copying_host_device)
-{
-  MatrixXXd<3, 4, ColMajorIndexStrategy> m(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0);
 
-  MatrixXXd<3, 4, ColMajorIndexStrategy> h;
-  copyh<copier::LocalElwise>(h, m);
-  AllocMatrixd<mem::alloc::device> d(3, 4);
-  copyh<copier::TransferStorage>(d, h);
-  copyh<copier::LocalElwise>(h, SingleValueTensor<double, 3, 4>(-1.2));
-
-  copyh<copier::TransferStorage>(h, d);
-  CHECK_ONLY_HOST((m == h).all());
-  
-  copyh<copier::DeviceElwise<>>(d, d * 2);
-  copyh<copier::TransferStorage>(h, d);
-  CHECK_ONLY_HOST((m * 2 == h).all());
-}
-#endif
 
 TEST_CASE(matrix_mul)
 {

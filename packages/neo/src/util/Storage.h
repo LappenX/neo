@@ -3,6 +3,7 @@
 
 #include <Common.h>
 
+#include <cstring>
 #include <type_traits>
 #include <util/Util.h>
 #include <util/Assert.h>
@@ -112,7 +113,49 @@ struct device
 
 } // end of ns alloc
 
+namespace detail {
 
+#ifdef __CUDACC__
+template <bool TDestOnHost, bool TSrcOnHost>
+struct CudaMemcpyKind;
+
+template <>
+struct CudaMemcpyKind<true, true>
+{
+  static const cudaMemcpyKind value = cudaMemcpyHostToHost;
+};
+
+template <>
+struct CudaMemcpyKind<true, false>
+{
+  static const cudaMemcpyKind value = cudaMemcpyDeviceToHost;
+};
+
+template <>
+struct CudaMemcpyKind<false, true>
+{
+  static const cudaMemcpyKind value = cudaMemcpyHostToDevice;
+};
+
+template <>
+struct CudaMemcpyKind<false, false>
+{
+  static const cudaMemcpyKind value = cudaMemcpyDeviceToDevice;
+};
+#endif
+
+} // end of ns detail
+
+template <bool TDestOnHost, bool TSrcOnHost, typename T>
+__host__
+void copy(T* dest, const T* src, size_t num)
+{
+  #ifdef __CUDACC__
+    CUDA_SAFE_CALL(cudaMemcpy(dest, src, num * sizeof(T), detail::CudaMemcpyKind<TDestOnHost, TSrcOnHost>::value));
+  #else
+    memcpy(dest, src, num * sizeof(T));
+  #endif
+}
 
 template <typename TElementType, size_t TSize>
 class LocalStorage final
