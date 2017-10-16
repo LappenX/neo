@@ -185,6 +185,11 @@ ELWISE_OP_TT(fmod, math::functor::fmod);
 ELWISE_OP_ST(fmod, math::functor::fmod);
 ELWISE_OP_TS(fmod, math::functor::fmod);
 
+ELWISE_OP_T(abs, math::functor::abs);
+ELWISE_OP_T(floor, math::functor::floor);
+ELWISE_OP_T(ceil, math::functor::ceil);
+ELWISE_OP_T(round, math::functor::round);
+
 
 
 ELWISE_OP_TT(operator==, math::functor::eq);
