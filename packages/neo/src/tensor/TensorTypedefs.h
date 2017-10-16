@@ -32,7 +32,7 @@ struct TensorTraits;
   __host__ __device__ \
   ThisType& operator=(const Tensor<TTensorType2, TElementType2, TDims2...>& other) \
   { \
-    copy<copier::LocalElwise>(*this, other); \
+    copier::Default::copy(*this, other); \
     return *this; \
   }
 #define TENSOR_DIMS_IMPL_FROM_IND(NAME) \

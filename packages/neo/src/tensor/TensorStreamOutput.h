@@ -53,6 +53,7 @@ struct StreamOutputHelper<true, I>
 template <typename TStreamType, typename TTensorType, typename TElementType, size_t... TDims,
   ENABLE_IF((std::is_convertible<TStreamType, const std::ostream&>::value || std::is_convertible<TStreamType, const util::DeviceCout&>::value)
     && is_tensor_v<TTensorType>::value)>
+__host__ __device__
 TStreamType& operator<<(TStreamType& stream, const Tensor<TTensorType, TElementType, TDims...>& tensor)
 {
   detail::StreamOutputHelper<tmp::value_sequence::nth_element_v<0, DimSeq<TDims...>>::value == 0,

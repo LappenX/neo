@@ -25,3 +25,6 @@
 #define CHECK(...) BOOST_CHECK((__VA_ARGS__))
 
 #endif
+
+#define TEST_CASE_ONLY_HOST(NAME) BOOST_AUTO_TEST_CASE(NAME)
+#define CHECK_ONLY_HOST(...) BOOST_CHECK((__VA_ARGS__))

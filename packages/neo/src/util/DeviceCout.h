@@ -2,6 +2,7 @@
 #define DEVICE_COUT_H
 
 #include <Common.h>
+#include <utility>
 
 namespace util {
 
@@ -35,7 +36,7 @@ PRINT_TYPE(bool)
 class DeviceCout
 {
 public:
-  template <typename T>
+  template <typename T, typename = decltype(detail::printDevice(std::declval<T>()))>
   __host__ __device__
   DeviceCout& operator<<(T object)
   {

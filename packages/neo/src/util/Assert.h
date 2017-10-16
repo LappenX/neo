@@ -49,7 +49,7 @@ public:
   __host__ __device__
   AssertCout& operator<<(T object)
   {
-    m_cout<< object;
+    m_cout << object;
     return *this;
   }
 
@@ -82,7 +82,7 @@ private:
       cudaError_t err = cudaGetLastError(); \
       if (err != cudaSuccess) \
       { \
-        ::detail::AssertCout() << "\nCuda safe call '" << #__VA_ARGS__ << "' failed in " << __FILE__ << ":" << __LINE__ << "!\nErrCode" << err << "\n" << cudaGetErrorString(err) << "\n"; \
+        ::detail::AssertCout() << "\nCuda safe call '" << #__VA_ARGS__ << "' failed in " << __FILE__ << ":" << __LINE__ << "!\nCuda Error Code: " << err << "\nCuda Error String: " << cudaGetErrorString(err) << "\n"; \
         EXIT; \
       } \
     } while(false)

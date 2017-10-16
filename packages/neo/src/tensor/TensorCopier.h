@@ -13,7 +13,7 @@ struct LocalElwise
   __host__ __device__
   static void copy(TTensorDest&& dest, TTensorSrc&& src, TCoords... coords)
   {
-    ASSERT(dest.template dim<I - 1>() == src.template dim<I - 1>(), "Inconsistent dimensions");
+    ASSERT(dest.template dim<I - 1>() == src.template dim<I - 1>(), "Incompatible dimensions");
     size_t max = dest.template dim<I - 1>();
     for (size_t i = 0; i < max; i++)
     {
@@ -29,7 +29,7 @@ struct LocalElwise<0>
   __host__ __device__
   static void copy(TTensorDest&& dest, TTensorSrc&& src, TCoords... coords)
   {
-    // TODO: calculate linear index only once, also for other multi tensor operations
+    // TODO: calculate linear index only once, also for other multi tensor operations, with compilation switch ALLOWS_LINEAR_INDEX
     dest(coords...) = src(coords...);
   }
 };
@@ -59,5 +59,8 @@ void copy(TTensorDest&& dest, TTensorSrc&& src)
 {
   TTensorCopier::copy(util::forward<TTensorDest>(dest), util::forward<TTensorSrc>(src));
 }
+
+using Default = LocalElwise;
+
 
 } // end of ns tensor

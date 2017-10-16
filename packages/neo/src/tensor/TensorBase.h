@@ -63,7 +63,7 @@ public:
   {
     return static_cast<const TThisType*>(this)->dim_impl(index);
   }
-
+  // TODO: return dims vector not as VectorXs but as general reference to Tensor vector
   template <size_t TLength = non_trivial_dimensions_num_v<DimSeq<TENSOR_DIMS_USE>>::value>
   __host__ __device__
   VectorXs<TLength> dims() const
