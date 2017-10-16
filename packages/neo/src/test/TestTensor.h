@@ -98,6 +98,12 @@ TEST_CASE(tensor_cross)
   CHECK(all(cross(Vector3ui(1, 0, 0), Vector3ui(0, 1, 0)) == Vector3ui(0, 0, 1)));
 }
 
+TEST_CASE(tensor_homogeneous_coordinates)
+{
+  CHECK(all(dehomogenize(homogenize(Vector3i(3, 6, 9))) == Vector3i(3, 6, 9)));
+  CHECK(all(dehomogenize(homogenize(Vector3i(3, 6, 9)) * 3) == Vector3i(3, 6, 9)));
+}
+
 TEST_CASE(matrix_product)
 {
   Matrix23d md1(1, 4, 2, 5, 3, 6);

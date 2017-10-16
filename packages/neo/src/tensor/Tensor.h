@@ -29,5 +29,6 @@
 #include "IdentityMatrix.h"
 #include "ElementSupplierTensor.h"
 #include "StridedStorageTensor.h"
+#include "HomogeneousCoordinates.h"
 
 #endif // TENSOR_H
