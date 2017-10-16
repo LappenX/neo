@@ -54,6 +54,29 @@ struct TensorTraits;
 
 
 
+template <typename TStorageType, typename TIndexStrategy, typename TThisType, typename TSuperType>
+class DenseStorageTensor : public TSuperType
+{
+public:
+  using StorageType = TStorageType;
+  using IndexStrategy = TIndexStrategy;
+
+  using TSuperType::TSuperType;
+
+  __host__ __device__
+  TStorageType& storage()
+  {
+    return static_cast<TThisType*>(this)->storage();
+  }
+
+  __host__ __device__
+  const TStorageType& storage() const
+  {
+    return static_cast<const TThisType*>(this)->storage();
+  }
+};
+
+
 
 namespace detail {
 

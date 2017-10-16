@@ -133,14 +133,18 @@ private:
 
 
 template <typename TStorageType, typename TElementType, typename TIndexStrategy, size_t... TDims>
-class DenseDynamicStorageTensor : public DynamicTensorStoreDimensions<DenseDynamicStorageTensor<TStorageType, TElementType, TIndexStrategy, TDims...>, TElementType, TDims...>
+class DenseDynamicStorageTensor : public DenseStorageTensor<TStorageType, TIndexStrategy,
+                                                      DenseDynamicStorageTensor<TStorageType, TElementType, TIndexStrategy, TDims...>,
+                                                      DynamicTensorStoreDimensions<DenseDynamicStorageTensor<TStorageType, TElementType, TIndexStrategy, TDims...>, TElementType, TDims...>>
 {
 public:
   static_assert(std::is_same<TElementType, typename TStorageType::ElementType>::value, "Invalid storage type");
   static_assert(TStorageType::HAS_DYN_SIZE_CONSTRUCTOR, "Invalid storage type");
 
   using ThisType = DenseDynamicStorageTensor<TStorageType, TElementType, TIndexStrategy, TDims...>;
-  using SuperType = DynamicTensorStoreDimensions<ThisType, TElementType, TDims...>;
+  using SuperType = DenseStorageTensor<TStorageType, TIndexStrategy,
+                      DenseDynamicStorageTensor<TStorageType, TElementType, TIndexStrategy, TDims...>,
+                      DynamicTensorStoreDimensions<DenseDynamicStorageTensor<TStorageType, TElementType, TIndexStrategy, TDims...>, TElementType, TDims...>>;
   using IndexStrategy = TIndexStrategy;
 
   template <typename... TDimensionArgs, ENABLE_IF_SUPERTENSOR_CONSTRUCTIBLE(TDimensionArgs...)>
@@ -150,7 +154,7 @@ public:
     , m_storage(dimensionProduct(util::forward<TDimensionArgs>(args)...))
   {
   }
-  
+
   __host__ __device__
   TStorageType& storage()
   {

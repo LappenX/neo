@@ -76,15 +76,17 @@ public:
 
 
 
-
-
 template <typename TStorageType, typename TElementType, typename TIndexStrategy, size_t... TDims>
-class DenseStaticStorageTensor : public StaticTensor<DenseStaticStorageTensor<TStorageType, TElementType, TIndexStrategy, TDims...>, TElementType, TDims...>
+class DenseStaticStorageTensor : public DenseStorageTensor<TStorageType, TIndexStrategy,
+                                                    DenseStaticStorageTensor<TStorageType, TElementType, TIndexStrategy, TDims...>,
+                                                    StaticTensor<DenseStaticStorageTensor<TStorageType, TElementType, TIndexStrategy, TDims...>, TElementType, TDims...>>
 {
 public:
   static_assert(math::multiply(TDims...) == TStorageType::SIZE, "Invalid storage size");
   static_assert(std::is_same<TElementType, typename TStorageType::ElementType>::value, "Invalid storage type");
-  using SuperType = StaticTensor<DenseStaticStorageTensor<TStorageType, TElementType, TIndexStrategy, TDims...>, TElementType, TDims...>;
+  using SuperType = DenseStorageTensor<TStorageType, TIndexStrategy,
+                      DenseStaticStorageTensor<TStorageType, TElementType, TIndexStrategy, TDims...>,
+                      StaticTensor<DenseStaticStorageTensor<TStorageType, TElementType, TIndexStrategy, TDims...>, TElementType, TDims...>>;
   using ThisType = DenseStaticStorageTensor<TStorageType, TElementType, TIndexStrategy, TDims...>;
   using IndexStrategy = TIndexStrategy;
 
