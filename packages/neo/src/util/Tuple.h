@@ -92,6 +92,13 @@ public:
     return detail::TupleGet<I, TFirst, TRest...>::get(*this);
   }
 
+  template <typename TFunc>
+  void for_each(TFunc functor) const
+  {
+    functor(m_first);
+    m_rest.for_each(functor);
+  }
+
 private:
   TFirst m_first;
   Tuple<TRest...> m_rest;
@@ -100,6 +107,11 @@ private:
 template <>
 class Tuple<>
 {
+public:
+  template <typename TFunc>
+  void for_each(TFunc functor) const
+  {
+  }
 };
 
 
