@@ -2,10 +2,9 @@
 
 namespace gl {
 
-VertexArrayObject::VertexArrayObject(const AttributeMapping& attribute_mapping, GLenum render_type)
+VertexArrayObject::VertexArrayObject(const AttributeMapping& attribute_mapping)
     : m_handle(0)
     , m_attribute_mapping(attribute_mapping)
-    , m_render_type(render_type)
     , m_vertex_num(0)
 {
   glGenVertexArrays(1, &m_handle);
@@ -47,19 +46,19 @@ void VertexArrayObject::addAttribute(VertexAttribute attrib)
   LOG(debug, "gl") << "Added attribute to vertex array object";
 }
 
-void VertexArrayObject::render(size_t first, size_t num)
+void VertexArrayObject::render(GLenum render_type, size_t first, size_t num)
 {
   bind();
-  glDrawArrays(this->m_render_type, first, num);
+  glDrawArrays(render_type, first, num);
   GL_CHECK_ERROR("Failed to draw vertex array object");
   unbind();
 }
 
-void VertexArrayObject::render(size_t first, size_t num, IndexBufferObject* ibo)
+void VertexArrayObject::render(GLenum render_type, size_t first, size_t num, IndexBufferObject* ibo)
 {
   this->bind();
   ibo->bind();
-  glDrawElements(this->m_render_type, num, ibo->m_index_type, reinterpret_cast<void*>(ibo->m_index_size * first));
+  glDrawElements(render_type, num, ibo->m_index_type, reinterpret_cast<void*>(ibo->m_index_size * first));
   GL_CHECK_ERROR("Failed to draw vertex array object");
   ibo->unbind();
   this->unbind();

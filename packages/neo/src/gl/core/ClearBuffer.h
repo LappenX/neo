@@ -3,7 +3,6 @@
 
 #include <Common.h>
 
-#include "../RenderStep.h"
 #include "../GlError.h"
 
 #include <GL/glew.h>
@@ -11,7 +10,7 @@
 
 namespace gl {
 
-class ClearColorBuffer : public UnRenderStep
+class ClearColorBuffer
 {
 public:
   ClearColorBuffer(tensor::Vector4f color)
@@ -19,7 +18,7 @@ public:
   {
   }
 
-  void render(RenderContext& context)
+  void clear()
   {
     glClearColor(m_color(0), m_color(1), m_color(2), m_color(3));
     glClear(GL_COLOR_BUFFER_BIT);

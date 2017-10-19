@@ -6,7 +6,6 @@
 #include <util/Property.h>
 #include <util/Tuple.h>
 #include "../core/VertexArrayObject.h"
-#include "../RenderStep.h"
 
 #include <string>
 #include <functional> // hash
@@ -59,7 +58,7 @@ public:
     init();
   }
 
-  ~Shader();
+  virtual ~Shader();
 
   std::string getInfoLog() const;
 
@@ -68,8 +67,8 @@ public:
     return "shader program";
   }
 
-  void pre(RenderContext& context);
-  void post(RenderContext& context);
+  void activate();
+  void deactivate();
 
   template <typename T>
   friend class Uniform;

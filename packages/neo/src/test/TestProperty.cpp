@@ -5,7 +5,7 @@
 #include <observer/ObservableProperty.h>
 #include <util/Property.h>
 #include <util/Math.h>
-
+ // TODO:
 BOOST_AUTO_TEST_CASE(mapped_property)
 {
   SimpleProperty<uint32_t> p1(11);

@@ -48,8 +48,12 @@ public:
 
   void subscribe(ObservableEvent<TArgs...>* observed) const
   {
-    m_observed.push_back(observed);
-    observed->m_observers.push_back(this);
+    observed->subscribe(this);
+  }
+
+  void unsubscribe(ObservableEvent<TArgs...>* observed) const
+  {
+    observed->unsubscribe(this);
   }
 
   virtual void handle(TArgs... args) = 0;
@@ -107,6 +111,20 @@ public:
   {
     this->m_observers.push_back(std::make_pair(observer, false));
     observer->m_observed.push_back(this);
+  }
+
+  void unsubscribe(Observer<TArgs...>* observer)
+  {
+    auto observer_it = std::find(m_observers.begin(), m_observers.end(), observer);
+    ASSERT(observer_it != m_observers.end(), "Cannot remove observer that does not observe this event");
+    auto observed_it = std::find(observer->m_observed.begin(), observer->m_observed.end(), this);
+    ASSERT(observed_it != observer->m_observed.end(), "ObservableEvent not found in observer->m_observed");
+    observer->m_observed.erase(observed_it);
+    if (observer_it->second)
+    {
+      delete observer_it->first;
+    }
+    m_observers.erase(observer_it);
   }
 
   template <typename TFunctor>

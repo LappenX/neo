@@ -193,6 +193,48 @@ T perlin(const tensor::VectorXT<T, TDims>& location)
 
 
 
+/*
+void smooth(std::vector<tensor::Vector2d>& out, const std::vector<tensor::Vector2d>& in, int32_t radius)
+{
+  out.resize(in.size());
+  for (int32_t i = 0; i < in.size(); i++)
+  {
+    size_t num = 0;
+    tensor::Vector2d sum(0, 0);
+    for (int32_t r = -radius; r <= radius; r++)
+    {
+      if (i >= -r && i + r < in.size())
+      {
+        sum = sum + in[i + r];
+        num++;
+      }
+    }
+    out[i] = sum / num;
+  }
+}
+
+void calcDeriv(std::vector<tensor::Vector2d>& out, const std::vector<tensor::Vector2d>& in)
+{
+  out.resize(in.size() - 1);
+  for (size_t i = 0; i < in.size() - 1; i++)
+  {
+    out[i] = in[i + 1] - in[i];
+  }
+}
+
+void calcInverseDeriv(std::vector<tensor::Vector2d>& out, const std::vector<tensor::Vector2d>& in, tensor::Vector2d initial)
+{
+  out.resize(in.size() + 1);
+  out[0] = initial;
+  for (size_t i = 0; i < in.size(); i++)
+  {
+    out[i + 1] = out[i] + in[i];
+  }
+}*/
+
+
+
+
 
 int main (int argc, char* argv[])
 {
@@ -215,8 +257,11 @@ int main (int argc, char* argv[])
   gl::GlfwWindow window("neo_title", 500, 400, 60, true);
   gl::glew::init();
 
-  
-  auto image = manager.get<res::ImageFile>(boost::filesystem::current_path() / "res", "a.bmp");
+
+  auto image = manager.get<res::ImageFile>("/home/lappen", "a.bmp")->getImage();
+
+  std::cout << tensor::cast_to<uint32_t>(*image->getData()) << std::endl;
+
 
 
   gl::Viewport viewport(0, 0, 500, 400);
@@ -252,39 +297,42 @@ int main (int argc, char* argv[])
   indices[3] = 3;
   rectangle_ibo.write(indices);
 
-  gl::VertexArrayObject rectangle_vao(attribute_mapping, GL_TRIANGLE_STRIP);
+  gl::VertexArrayObject rectangle_vao(attribute_mapping);
   rectangle_vao.addAttribute(gl::VertexAttribute("in_location", &rectangle_data, 3 * sizeof(float), 0, GL_FLOAT, 3));
 
 
 
 
 
-  gl::MultiplicationRenderStack<tensor::Matrix4f, 64>
-    model_matrix;
 
-  SimpleObservableProperty<tensor::Vector3f> camera_pos(tensor::Vector3f(0, 0, -1));
-  SimpleObservableProperty<tensor::Vector3f> camera_view_target(tensor::Vector3f(0, 0, 0));
-  SimpleObservableProperty<tensor::Vector3f> camera_up(tensor::Vector3f(0, 1, 0));
-  gl::LookAtCamera<SimpleObservableProperty<tensor::Vector3f>, SimpleObservableProperty<tensor::Vector3f>, SimpleObservableProperty<tensor::Vector3f>>
-    view_matrix(&camera_pos, &camera_view_target, &camera_up);
+
+
   
-  StaticFunctionMappedProperty<math::functor::multiply, decltype(view_matrix), decltype(model_matrix)>
+
+
+
+
+
+
+
+
+
+  gl::MultiplicationRenderStack<tensor::Matrix4f, 64> model_matrix;
+  gl::LookAtCamera<MAP_LAZY> view_matrix(tensor::Vector3f(0, 0, 1), tensor::Vector3f(0, 0, 0), tensor::Vector3f(0, 1, 0));
+  
+  property::mapped::Functor<math::functor::multiply, decltype(view_matrix), decltype(model_matrix)>
     mv_matrix(&view_matrix, &model_matrix);
 
-  SimpleObservableProperty<float> fov(45.0f / 180.0f * 3.14159265f);
-  SimpleObservableProperty<float> aspect_ratio(((float) window.getWidth()) / window.getHeight());
-  SimpleObservableProperty<float> near(0.01f);
-  SimpleObservableProperty<float> far(100);
-  gl::PerspectiveProjection<SimpleObservableProperty<float>, SimpleObservableProperty<float>, SimpleObservableProperty<float>,
-                             SimpleObservableProperty<float>>
-    projection_matrix(&fov, &aspect_ratio, &near, &far);
+  //gl::PerspectiveProjection projection_matrix(45.0f / 180.0f * 3.14159265f, ((float) window.getWidth()) / window.getHeight(), 0.01f, 100.0f);
+  gl::OrthographicProjection<MAP_LAZY> projection_matrix(0.0f, 1.0f, 1.0f, 0.0f, -1.0f, 1.0f);
 
-  StaticFunctionMappedProperty<math::functor::multiply, decltype(projection_matrix), decltype(mv_matrix)>
+  property::mapped::Functor<math::functor::multiply, decltype(projection_matrix), decltype(mv_matrix)>
     mvp_matrix(&projection_matrix, &mv_matrix);
 
-  gl::Uniform<tensor::Matrix4f> rectangle_mvp_uniform(&rectangle_shader, "uModelViewProjectionMatrix");
+  gl::Uniform<tensor::Matrix4f> rectangle_mvp_uniform(&rectangle_shader, "uModelViewProjectionMatrix", math::consts::one<tensor::Matrix4f>::get());
+  rectangle_mvp_uniform.Value().refer_to(&mvp_matrix);
 
-  auto mvp_setter = rectangle_mvp_uniform.makeSetStep(&mvp_matrix);
+
 
 
 
@@ -296,20 +344,120 @@ int main (int argc, char* argv[])
                           gl::sub(&rectangle_shader, gl::then(&mvp_setter, &window, &rectangle_vao))
                         );*/
 
-  window.getKeyPressEvent() += [&](gl::GlfwKey key, bool down){
-    
+
+/*
+  const size_t MAX_POINT_NUM = 1024;
+  gl::BufferObject line_data(GL_DYNAMIC_DRAW);
+  line_data.write(GL_ARRAY_BUFFER, NULL, MAX_POINT_NUM * sizeof(tensor::Vector3f));
+
+  gl::VertexArrayObject lines_vao(attribute_mapping);
+  lines_vao.addAttribute(gl::VertexAttribute("in_location", &line_data, 3 * sizeof(float), 0, GL_FLOAT, 3));
+
+  bool clicked = false;
+  std::vector<tensor::Vector2d> points;
+
+  int deriv_num = 0;
+
+  auto do_calculation = [&](){
+    for (size_t i = 0; i < 3; i++)
+    {
+      std::cout << points[i] << "   ";
+    }
+    std::cout << std::endl;
+
+    std::vector<std::vector<tensor::Vector2d>> derivs;
+    derivs.resize(deriv_num + 1);
+    derivs[0] = points;
+    size_t i = 0;
+    for (; i < deriv_num; i++)
+    {
+      calcDeriv(derivs[i + 1], derivs[i]);
+    }
+
+    std::vector<tensor::Vector2d> smoothed;
+    smooth(smoothed, derivs[derivs.size() - 1], 2);
+    derivs[derivs.size() - 1] = smoothed;
+
+    for (; i > 0; i--)
+    {
+      calcInverseDeriv(derivs[i - 1], derivs[i], derivs[i - 1][0]);
+    }
+    points = derivs[0];
+
+
+
+
+
+
+    std::vector<tensor::Vector3f> data;
+    data.resize(points.size());
+    for (size_t i = 0; i < data.size(); i++)
+    {
+      data[i] = tensor::Vector3f(points[i](0), points[i](1), 0);
+    }
+
+    line_data.write(GL_ARRAY_BUFFER, 0, reinterpret_cast<uint8_t*>(&data[0]), data.size() * sizeof(tensor::Vector3f));
   };
 
-  gl::RenderContext context;
+
+  KeyboardLayout keyboard_layout = makeLayoutUS();
+  window.getKeyPressEvent() += [&](gl::GlfwKey key, bool down){
+    if (key.getKeyCaption(keyboard_layout) == MOUSE_LEFT)
+    {
+      if (down)
+      {
+        clicked = true;
+        points.clear();
+        std::cout << "Clicked" << std::endl;
+      }
+      else
+      {
+        clicked = false;
+        std::cout << "Released" << std::endl;
+        do_calculation();
+      }
+    }
+    else if (key.getKeyCaption(keyboard_layout) == KEYBOARD_ARROW_UP && down)
+    {
+      deriv_num++;
+      std::cout << "derivs = " << deriv_num << std::endl;
+    }
+    else if (key.getKeyCaption(keyboard_layout) == KEYBOARD_ARROW_DOWN && down)
+    {
+      deriv_num--;
+      std::cout << "derivs = " << deriv_num << std::endl;
+    }
+  };
+  window.getCursorMoveEvent() += [&](tensor::Vector2d pos){
+    if (clicked)
+    {
+      pos = pos / window.getSize();
+      boost::array<tensor::Vector3f, 1> data;
+      data[0] = tensor::Vector3f(pos(0), pos(1), 0);
+      line_data.write(GL_ARRAY_BUFFER, points.size() * sizeof(tensor::Vector3f), data);
+      points.push_back(pos);
+      if (points.size() >= MAX_POINT_NUM)
+      {
+        clicked = false;
+        std::cout << "Released" << std::endl;
+        do_calculation();
+      }
+    }
+  };*/
+
   while (true)
   {
-    clear_buffer.render(context);
-    viewport.render(context);
-    rectangle_shader.pre(context);
-    mvp_setter.render(context);
-    window.render(context);
-    rectangle_vao.render(1, 3, &rectangle_ibo);
-    rectangle_shader.post(context);
+    clear_buffer.clear();
+    viewport.set();
+    rectangle_shader.activate();
+    rectangle_mvp_uniform.set();
+    window.bind();
+
+    rectangle_vao.render(GL_TRIANGLE_STRIP, 0, 4, &rectangle_ibo);
+
+    //lines_vao.render(GL_LINE_STRIP, 0, points.size());
+
+    rectangle_shader.deactivate();
 
     window.poll();
     window.swap();

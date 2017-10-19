@@ -5,6 +5,7 @@
 
 #include "../target/RenderTarget.h"
 #include <MVC.h>
+#include <tensor/Tensor.h>
 
 #include <string>
 #include <GLFW/glfw3.h>
@@ -29,7 +30,7 @@ public:
   {
   }
 
-  KeyCaption getKeyCaption(KeyboardLayout layout) const
+  KeyCaption getKeyCaption(const KeyboardLayout& layout) const
   {
     return layout.fromUS(getUSKeyCaption());
   }
@@ -138,9 +139,14 @@ public:
     }
   }
 
-  void setCursorPosition(double x, double y)
+  void setCursorPosition(tensor::Vector2d pos)
   {
-    glfwSetCursorPos(m_handle, x, y);
+    glfwSetCursorPos(m_handle, pos(0), pos(1));
+  }
+
+  tensor::Vector2ui getSize() const
+  {
+    return tensor::Vector2ui(m_width, m_height); // TODO: store as tensor in class?
   }
 
   friend void key_callback(GLFWwindow* handle, int key, int scancode, int action, int mods);

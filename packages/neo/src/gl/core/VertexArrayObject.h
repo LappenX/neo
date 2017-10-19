@@ -3,10 +3,10 @@
 
 #include <Common.h>
 
-#include "../RenderStep.h"
 #include "../GlError.h"
 #include "../core/BufferObject.h"
 #include "../GlConsts.h"
+#include <util/Assert.h>
 
 #include <vector>
 #include <map>
@@ -150,9 +150,8 @@ class VertexArrayObject
 public:
   /*!
    * \brief 
-   * \param render_type Specifies what kind of primitives to render. Symbolic constants GL_POINTS, GL_LINE_STRIP, GL_LINE_LOOP, GL_LINES, GL_LINE_STRIP_ADJACENCY, GL_LINES_ADJACENCY, GL_TRIANGLE_STRIP, GL_TRIANGLE_FAN, GL_TRIANGLES, GL_TRIANGLE_STRIP_ADJACENCY, GL_TRIANGLES_ADJACENCY and GL_PATCHES are accepted. 
-   */
-  VertexArrayObject(const AttributeMapping& attribute_mapping, GLenum render_type);
+   *    */
+  VertexArrayObject(const AttributeMapping& attribute_mapping);
   ~VertexArrayObject();
 
   void addAttribute(VertexAttribute attrib);
@@ -169,16 +168,16 @@ public:
     
   /*!
    * \brief
+   * \param render_type Specifies what kind of primitives to render. Symbolic constants GL_POINTS, GL_LINE_STRIP, GL_LINE_LOOP, GL_LINES, GL_LINE_STRIP_ADJACENCY, GL_LINES_ADJACENCY, GL_TRIANGLE_STRIP, GL_TRIANGLE_FAN, GL_TRIANGLES, GL_TRIANGLE_STRIP_ADJACENCY, GL_TRIANGLES_ADJACENCY and GL_PATCHES are accepted. 
    * \param first Specifies the starting index in the enabled arrays.
    * \param num Specifies the number of indices to be rendered.
    */
-  void render(size_t first, size_t num);
-  void render(size_t first, size_t num, IndexBufferObject* ibo);
+  void render(GLenum render_type, size_t first, size_t num);
+  void render(GLenum render_type, size_t first, size_t num, IndexBufferObject* ibo);
 
 private:
   GLuint m_handle;
   const AttributeMapping& m_attribute_mapping;
-  GLenum m_render_type;
   size_t m_vertex_num;
 };
 

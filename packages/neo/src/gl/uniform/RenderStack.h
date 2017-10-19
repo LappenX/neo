@@ -3,7 +3,6 @@
 
 #include <Common.h>
 
-#include "../RenderStep.h"
 #include <util/FastStack.h>
 #include <util/Math.h>
 #include <util/Assert.h>
@@ -13,22 +12,12 @@
 namespace gl {
 
 template <typename T, size_t TSize, typename CRTP>
-class RenderStack : public BinRenderStep, public Property<const T&>
+class RenderStack : public property::Property<const T&>
 {
 public:
   RenderStack(T empty_value)
     : m_empty_value(empty_value)
   {
-  }
-
-  void pre(RenderContext& context)
-  {
-    ASSERT(m_stack.isEmpty(), "Invalid stack state");
-  }
-
-  void post(RenderContext& context)
-  {
-    ASSERT(m_stack.isEmpty(), "Invalid stack state");
   }
 
   void push(const T& value)

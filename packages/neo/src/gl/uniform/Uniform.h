@@ -4,7 +4,6 @@
 #include <Common.h>
 
 #include "../core/Shader.h"
-#include "../RenderStep.h"
 #include <util/Property.h>
 #include <tensor/Tensor.h>
 
@@ -53,17 +52,15 @@ void glUniform(GLint location, const T& value)
 
 
 
-template <typename T, typename TPropertyCRTP = void>
-class UniformSetter;
-
 template <typename T>
 class Uniform
 {
 public:
-  Uniform(Shader* shader, std::string name)
+  Uniform(Shader* shader, std::string name, T value)
     : m_shader(shader)
     , m_name(name)
     , m_location(-1)
+    , m_value(value)
   {
     m_location = glGetUniformLocation(m_shader->m_handle, m_name.c_str());
     if (m_location < 0)
@@ -72,48 +69,24 @@ public:
     }
   }
 
-  void glUniform(const T& value)
+  void set() const
   {
-    gl::glUniform(m_location, value);
+    gl::glUniform(m_location, m_value.get());
   }
 
-  template <typename TProperty>
-  UniformSetter<T, TProperty> makeSetStep(const TProperty* property);
+  property::Container<T>& Value()
+  {
+    return m_value;
+  }
 
 private:
   Shader* m_shader;
   std::string m_name;
   GLint m_location;
+
+  property::Container<T> m_value;
 };
 
-template <typename T, typename TProperty>
-class UniformSetter : public UnRenderStep
-{
-public:
-  UniformSetter(Uniform<T>* uniform, const TProperty* property)
-    : m_uniform(uniform)
-    , m_property(property)
-  {
-  }
-
-  void render(RenderContext& context)
-  { // TODO: specialize subclass for T = const T&, single line for this:
-    T prop = m_property->get();
-    m_uniform->glUniform(prop);
-  }
-
-private:
-  Uniform<T>* m_uniform;
-  const TProperty* m_property;
-};
-
-template <typename T>
-template <typename TProperty>
-UniformSetter<T, TProperty> Uniform<T>::makeSetStep(const TProperty* property)
-{
-  return UniformSetter<T, TProperty>(this, property);
-}
-
-} // gl
+} // end of ns gl
 
 #endif // VIEW_GL_UNIFORM_UNIFORM_H

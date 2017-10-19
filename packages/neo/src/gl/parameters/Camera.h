@@ -6,17 +6,17 @@
 #include <observer/ObservableProperty.h>
 
 namespace gl {
-// TODO: for general types, no inline
 
-inline tensor::Matrix4f lookAt(tensor::Vector3f pos, tensor::Vector3f target, tensor::Vector3f up)
+template <typename TScalar>
+inline tensor::MatrixXXT<TScalar, 4, 4> lookAt(tensor::VectorXT<TScalar, 3> pos, tensor::VectorXT<TScalar, 3> target, tensor::VectorXT<TScalar, 3> up)
 {
-  tensor::Vector3f f, s, u;
+  tensor::VectorXT<TScalar, 3> f, s, u;
   f = tensor::normalize(target - pos);
-  s = tensor::normalize(tensor::cross(f, up));
+  s = tensor::normalize(tensor::cross(f, up)); // TODO: precalculate cross? plus new function?
   u = tensor::normalize(tensor::cross(s, f));
 
-  tensor::Matrix4f result;
-  result = tensor::broadcast<4, 4>(tensor::SingletonT<float>(0));
+  tensor::MatrixXXT<TScalar, 4, 4> result;
+  result = tensor::broadcast<4, 4>(tensor::SingletonT<TScalar>(0));
   result(0, 0) = s(0);
   result(0, 1) = s(1);
   result(0, 2) = s(2);
@@ -33,21 +33,29 @@ inline tensor::Matrix4f lookAt(tensor::Vector3f pos, tensor::Vector3f target, te
   return result;
 }
 
-template <typename... TInputProperties>
-class LookAtCamera : public LazyMappedObservableProperty<LookAtCamera<TInputProperties...>, tensor::Matrix4f, TInputProperties...>
+template <bool TEager>
+class LookAtCamera : public property::observable::mapped::AutoContainer<LookAtCamera<TEager>, TEager, tensor::Matrix4f, tensor::Vector3f, tensor::Vector3f, tensor::Vector3f>
 {
 public:
-  using LazyMappedObservableProperty<LookAtCamera<TInputProperties...>, tensor::Matrix4f, TInputProperties...>::LazyMappedObservableProperty;
-
+  LookAtCamera(tensor::Vector3f pos, tensor::Vector3f target, tensor::Vector3f up)
+    : property::observable::mapped::AutoContainer<LookAtCamera<TEager>, TEager, tensor::Matrix4f, tensor::Vector3f, tensor::Vector3f, tensor::Vector3f>
+        (pos, target, up)
+  {
+  }
+  
   tensor::Matrix4f forward(tensor::Vector3f pos, tensor::Vector3f target, tensor::Vector3f up) const
   {
-    return lookAt(pos, target, up);
+    return lookAt<float>(pos, target, up);
   }
 
+  AUTO_CONTAINER_PROPERTY(tensor::Vector3f, Position, 0)
+  AUTO_CONTAINER_PROPERTY(tensor::Vector3f, Target, 1)
+  AUTO_CONTAINER_PROPERTY(tensor::Vector3f, Up, 2)
+
 private:
-  NO_COPYING(LookAtCamera, <TInputProperties...>)
+  NO_COPYING(LookAtCamera, <TEager>)
 };
-/*
+/* TODO
 template <typename... TInputProperties>
 class LocRotCamera : public LazyMappedObservableProperty<LocRotCamera<TInputProperties...>, glm::mat4, TInputProperties...>
 {

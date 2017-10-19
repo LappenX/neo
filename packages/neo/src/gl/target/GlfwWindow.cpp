@@ -38,7 +38,7 @@ void key_callback(GLFWwindow* handle, int key, int scancode, int action, int mod
 
 void cursor_position_callback(GLFWwindow* handle, double x, double y)
 {
-  instances[handle]->m_cursor_move_event.raise(x, y);
+  instances[handle]->m_cursor_move_event.raise(tensor::Vector2d(x, y));
 }
 
 void mouse_button_callback(GLFWwindow* handle, int button, int action, int mods)

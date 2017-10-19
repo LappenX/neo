@@ -56,7 +56,7 @@ public:
     glBindBuffer(target, 0);
   }
 
-  void write(GLenum target, uint8_t* data, uint32_t length)
+  void write(GLenum target, uint8_t* data, size_t length)
   {
     // TODO: GL_VERSION_4_5 glNamedBufferData(m_handle, length, data, m_usage);
     bind(target);
@@ -69,6 +69,21 @@ public:
   void write(GLenum target, boost::array<T, TNum> data)
   {
     write(target, reinterpret_cast<uint8_t*>(&data[0]), TNum * sizeof(T));
+  }
+
+  void write(GLenum target, size_t offset, uint8_t* data, size_t length)
+  {
+    // TODO: GL_VERSION_4_5 glNamedBufferSubData
+    bind(target);
+    glBufferSubData(target, offset, length, data);
+    unbind(target);
+    GL_CHECK_ERROR("Failed to write data from host memory to device buffer object");
+  }
+
+  template <typename T, size_t TNum>
+  void write(GLenum target, size_t offset, boost::array<T, TNum> data)
+  {
+    write(target, offset, reinterpret_cast<uint8_t*>(&data[0]), TNum * sizeof(T));
   }
 
 private:

@@ -122,26 +122,17 @@ Shader::~Shader()
   LOG(debug, "gl") << "Destroyed " << this->toString();
 }
 
-void Shader::pre(RenderContext& context)
+void Shader::activate()
 {
-  if (context.active_shader)
-  {
-    throw GlException("A shader is already active");
-  }
-
   glUseProgram(this->m_handle);
   GL_CHECK_ERROR("Failed to activate " + this->toString());
-
-  context.active_shader = this;
 }
 
-void Shader::post(RenderContext& context)
+void Shader::deactivate()
 {
   VertexArrayObject::unbind(); // TODO: necessary? already in vao render func
   glUseProgram(0);
   GL_CHECK_ERROR("Failed to deactivate " + this->toString());
-
-  context.active_shader = NULL;
 }
 
 std::string Shader::getInfoLog() const

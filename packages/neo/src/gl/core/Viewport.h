@@ -2,13 +2,12 @@
 #define VIEW_GL_CORE_VIEWPORT_H
 
 #include <Common.h>
-#include "../RenderStep.h"
 
 #include <GL/gl.h>
 
 namespace gl {
 
-class Viewport : public UnRenderStep
+class Viewport
 {
 public:
   Viewport(size_t x, size_t y, size_t width, size_t height)
@@ -19,7 +18,7 @@ public:
   {
   }
 
-  void render(RenderContext& context)
+  void set()
   {
     glViewport(m_x, m_y, m_width, m_height);
   }
