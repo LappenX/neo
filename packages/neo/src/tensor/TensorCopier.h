@@ -79,8 +79,6 @@ private:
   }
 };
 
-using Default = LocalElwise;
-
 } // end of ns copier
 
 } // end of ns tensor

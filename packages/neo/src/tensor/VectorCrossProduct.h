@@ -2,8 +2,6 @@
 
 namespace tensor {
 
-
-
 template <typename TVectorTypeLeft, typename TVectorTypeRight>
 class VectorCrossProduct : public StaticOrDynamicTensor<
                                         VectorCrossProduct<TVectorTypeLeft, TVectorTypeRight>,

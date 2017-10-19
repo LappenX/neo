@@ -54,6 +54,8 @@ struct TensorTraits;
 
 
 
+
+
 template <typename TStorageType, typename TIndexStrategy, typename TThisType, typename TSuperType>
 class DenseStorageTensor : public TSuperType
 {
@@ -75,6 +77,19 @@ public:
     return static_cast<const TThisType*>(this)->storage();
   }
 };
+
+
+
+
+
+namespace copier {
+
+struct LocalElwise;
+using Default = LocalElwise;
+
+} // end of ns copier
+
+
 
 
 

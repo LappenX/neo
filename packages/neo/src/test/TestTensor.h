@@ -86,6 +86,17 @@ TEST_CASE(elwise_operations)
   CHECK(distance(fmod(Vector3f(2, 4, 6), Vector3f(3, 3, 3)), Vector3ui(2, 1, 0)) <= 1e-5f);
 }
 
+TEST_CASE(tensor_eval)
+{
+  CHECK(all((Vector3ui(1, 2, 3) + Vector3ui(1, 2, 3)).eval() == Vector3ui(2, 4, 6)));
+  CHECK(all(cast_to<uint32_t>(Vector3f(1.2, 2.2, 3.2)).eval() == Vector3ui(1, 2, 3)));
+
+  MatrixXXd<3, 4, ColMajorIndexStrategy> md(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0);
+  AllocMatrixd<mem::alloc::heap> md2(3, 4);
+  md2 = md;
+  CHECK(all(md2.eval() == md));
+}
+
 TEST_CASE(tensor_util)
 {
   CHECK(isSymmetric(MatrixXXd<3, 3, ColMajorIndexStrategy>(1.0, 2.0, 1.0, 2.0, 5.0, 4.0, 1.0, 4.0, 3.0)));
