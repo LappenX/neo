@@ -59,6 +59,4 @@ __host__ __device__
 auto fromSupplier(TOperation supplier, TDimArgTypes&&... dim_args)
 RETURN_AUTO(ElementSupplierTensor<TOperation, TElementType, TSupplierDims, TDimSeq>(supplier, util::forward<TDimArgTypes>(dim_args)...))
 
-
-
 } // end of ns tensor

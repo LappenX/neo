@@ -232,8 +232,6 @@ public:
     return this->dyn_dims()(index);
   }
 
-  TENSOR_DIMS_IMPL_FROM_IND(dyn_dims_impl)
-
 private:
   TTensorTypeIn m_tensor;
 };

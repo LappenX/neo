@@ -35,22 +35,6 @@ struct TensorTraits;
     copier::Default::copy(*this, other); \
     return *this; \
   }
-#define TENSOR_DIMS_IMPL_FROM_IND(NAME) \
-  template <size_t TLength> \
-  __host__ __device__ \
-  VectorXs<TLength> NAME() const \
-  { \
-    return dims_impl_helper(tmp::value_sequence::ascending_numbers_t<TLength>()); \
-  } \
-  private: \
-  template <size_t... TIndices> \
-  __host__ __device__ \
-  VectorXs<sizeof...(TIndices)> dims_impl_helper(tmp::value_sequence::Sequence<size_t, TIndices...>) const \
-  { \
-    return VectorXs<sizeof...(TIndices)>(this->template dim_impl<TIndices>()...); \
-  } \
-  public:
-// TODO: implement TENSOR_DYN_DIMS_IMPL_FROM_IND in base class, not separately in every special class; bool flag
 
 
 
@@ -103,6 +87,9 @@ class Tensor;
 template <typename TThisType, typename TElementType, size_t... TDims>
 using Tensor = detail::Tensor<TThisType, TElementType, TDims...>;
 
+template <typename TTensor, size_t TRank>
+class DimensionVector;
+
 #include "TensorTypedefs.hpp"
 
 template <typename TTensorRefType>
@@ -120,6 +107,7 @@ template <typename TTensorType>
 using non_const_param_tensor_store_t = decltype(detail::NonConstParamTensorStoreHelper::deduce(std::declval<TTensorType>()));
 template <typename TTensorType>
 using param_tensor_forward_t = decltype(detail::ParamTensorForwardHelper::deduce(std::declval<TTensorType>()));
+
 
 
 

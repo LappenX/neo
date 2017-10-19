@@ -11,6 +11,7 @@ struct StaticDimAccessHelper;
 template <size_t TFirst, size_t... TRest>
 struct StaticDimAccessHelper<TFirst, TRest...>
 {
+  __host__ __device__
   static size_t get(size_t index)
   {
     return index == 0 ? TFirst : StaticDimAccessHelper<TRest...>::get(index - 1);
@@ -20,6 +21,7 @@ struct StaticDimAccessHelper<TFirst, TRest...>
 template <>
 struct StaticDimAccessHelper<>
 {
+  __host__ __device__
   static size_t get(size_t index)
   {
     ASSERT(false, "Index out of bounds");
@@ -66,12 +68,11 @@ public:
   __host__ __device__
   size_t dim_impl(size_t index) const
   {
-    return math::lt(index, non_trivial_dimensions_num_v<tensor_dimseq_t<TThisType>>::value) ?
+    const size_t NON_TRIVIAL_DIMENSIONS_NUM = tensor::non_trivial_dimensions_num_v<tensor_dimseq_t<TThisType>>::value;
+    return math::lt(index, NON_TRIVIAL_DIMENSIONS_NUM) ?
           detail::StaticDimAccessHelper<TDims...>::get(index)
         : 1;
   }
-
-  TENSOR_DIMS_IMPL_FROM_IND(dims_impl)
 };
 
 

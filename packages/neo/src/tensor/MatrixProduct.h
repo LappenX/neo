@@ -92,8 +92,6 @@ public:
     }
   }
 
-  TENSOR_DIMS_IMPL_FROM_IND(dyn_dims_impl)
-
 private:
   TMatrixTypeLeft m_left;
   TMatrixTypeRight m_right;

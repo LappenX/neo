@@ -38,8 +38,6 @@ public:
   }
 };
 
-namespace detail {
-
 template <typename... TArgs>
 constexpr size_t multiply_all_but_first(size_t dim0, TArgs... dims)
 {
@@ -75,8 +73,6 @@ struct EvalHelper<false>
   }
 };
 
-} // end of ns detail
-
 template <typename TThisType, typename TElementType, TENSOR_DIMS_DECLARE_NO_DEFAULT>
 class Tensor : public ElementAccessFunctions<TThisType, TElementType, TensorTraits<TThisType>::RETURNS_REFERENCE>
 {
@@ -96,14 +92,11 @@ public:
   {
     return static_cast<const TThisType*>(this)->dim_impl(index);
   }
-  // TODO: return dims vector not as VectorXs but as general reference to Tensor vector
-  template <size_t TLength = non_trivial_dimensions_num_v<DimSeq<TENSOR_DIMS_USE>>::value>
+
+  template <size_t TRank = non_trivial_dimensions_num_v<DimSeq<TENSOR_DIMS_USE>>::value>
   __host__ __device__
-  VectorXs<TLength> dims() const
-  {
-    static_assert(TLength >= non_trivial_dimensions_num_v<DimSeq<TENSOR_DIMS_USE>>::value, "Non-trivial dimensions are cut off");
-    return static_cast<const TThisType*>(this)->template dims_impl<TLength>();
-  }
+  auto dims() const
+  RETURN_AUTO(DimensionVector<Tensor<TThisType, TElementType, TENSOR_DIMS_USE>, TRank>(*this))
 
   template <typename TTensorCopier = tensor::copier::Default, typename TAllocator = mem::alloc::heap, typename TIndexStrategy = ColMajorIndexStrategy>
   __host__ __device__

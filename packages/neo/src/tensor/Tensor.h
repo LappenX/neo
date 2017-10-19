@@ -15,6 +15,7 @@
 #include "TensorTypedefs.h"
 #include "TensorCoordsAndDims.h"
 #include "TensorBase.h"
+#include "DimensionVector.h"
 #include "TensorCopier.h"
 #include "StaticTensor.h"
 #include "DynamicTensor.h"

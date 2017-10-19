@@ -124,7 +124,7 @@ TEST_CASE(matrix_product)
 }
 
 TEST_CASE(special_tensor_constants)
-{
+{ // TODO: naming
   CHECK(all(identity_matrix<double, 3>::make() == MatrixXXd<3, 3>(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0)));
   CHECK(all(identity_matrix<double, DYN>::make(3) == MatrixXXd<3, 3>(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0)));
   CHECK(all(math::consts::one<MatrixXXd<3, 3>>::get() == MatrixXXd<3, 3>(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0)));

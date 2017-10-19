@@ -85,13 +85,6 @@ public:
   {
     return static_cast<const TThisType*>(this)->dyn_dim_impl(index);
   }
-
-  template <size_t TLength = non_trivial_dimensions_num_v<DimSeq<TDims...>>::value>
-  __host__ __device__
-  VectorXs<TLength> dims_impl() const
-  {
-    return static_cast<const TThisType*>(this)->template dyn_dims_impl<TLength>();
-  }
 };
 
 template <typename TThisType, typename TElementType, size_t... TDims>
@@ -119,10 +112,9 @@ public:
   __host__ __device__
   size_t dyn_dim_impl(size_t index) const
   {
-    return math::lt(index, non_trivial_dimensions_num_v<DimSeq>::value) ? m_dims(index) : 1;
+    const size_t NON_TRIVIAL_DIMENSIONS_NUM = non_trivial_dimensions_num_v<DimSeq>::value;
+    return math::lt(index, NON_TRIVIAL_DIMENSIONS_NUM) ? m_dims(index) : 1;
   }
-
-  TENSOR_DIMS_IMPL_FROM_IND(dyn_dims_impl)
 
 private:
   VectorXs<non_trivial_dimensions_num_v<DimSeq>::value> m_dims;

@@ -66,8 +66,6 @@ public:
             ? 1 : 0;
   }
 
-  TENSOR_DIMS_IMPL_FROM_IND(dyn_dims_impl)
-
   template <size_t TIndex>
   __host__ __device__
   size_t dyn_dim_impl() const

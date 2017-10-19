@@ -1,5 +1,23 @@
 namespace detail {
 
+/*
+detail::NonTrivialDimensionsNumHelper<tmp::value_sequence::reverse_t<TDimSeq>>::value);
+
+template <typename TDimSeq>
+struct NonTrivialDimensionsNumHelper;
+
+template <size_t TLastDim, size_t... TDims>
+struct NonTrivialDimensionsNumHelper<DimSeq<TLastDim, TDims...>>
+{
+  static const size_t value = TLastDim == 1 ? NonTrivialDimensionsNumHelper<DimSeq<TDims...>>::value : sizeof...(TDims) + 1;
+};
+
+template <>
+struct NonTrivialDimensionsNumHelper<DimSeq<>>
+{
+  static const size_t value = 0;
+};
+*/
 template <typename TDimSeq>
 struct DimsHelper;
 
